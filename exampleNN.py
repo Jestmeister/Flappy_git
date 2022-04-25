@@ -16,7 +16,7 @@ def NN(NNInput):
 theGame = flappyNN.Game()
 
 # theGame.Start(displayGameInput, limitFPSInput)
-gameOutput = theGame.Start(True, False)
+gameOutput = theGame.Start(False, False)
 
 while(True):
     #theGame.Update(Jump = input aka network output should be True or False) -> Game state
