@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
 from PIL import Image
+import pygame
 
 import torch
 import torch.nn as nn
@@ -14,7 +15,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+from environment import environment
+
 #https://pythonprogramming.net/training-deep-q-learning-dqn-reinforcement-learning-python-tutorial/?completed=/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
+#https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -40,32 +45,24 @@ class ReplayMemory(object):
 
 class DQN(nn.Module):
 
-    def __init__(self, h, w, outputs):
+    def __init__(self, n_inputs, n_actions, n_episodes):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        self.bn3 = nn.BatchNorm2d(32)
+        self.fc1    = nn.Linear(n_inputs, 64)  #change to len(self.output)
+        self.fc2    = nn.Linear(64, 64)
+        self.fc3    = nn.Linear(64, n_actions) #len(actions)
 
-        # Number of Linear input connections depends on output of conv2d layers
-        # and therefore the input image size, so compute it.
-        def conv2d_size_out(size, kernel_size = 5, stride = 2):
-            return (size - (kernel_size - 1) - 1) // stride  + 1
-        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
-        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-        linear_input_size = convw * convh * 32
-        self.head = nn.Linear(linear_input_size, outputs)
+        self.n_episodes = n_episodes
+        self.cur_episode = 0
+    
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = x.to(device)
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))
+        x = x.to(device)    #x = data.float()
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
     #Import some classez
     def get_input(self,NNInput):
@@ -89,10 +86,11 @@ TARGET_UPDATE = 10
 #_, _, screen_height, screen_width = init_screen.shape
 
 # Get number of actions from gym action space
+
 n_actions = 2
 
-policy_net = DQN(screen_height, screen_width, n_actions).to(device)
-target_net = DQN(screen_height, screen_width, n_actions).to(device)
+policy_net = DQN(4, n_actions).to(device)
+target_net = DQN(4, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
@@ -133,7 +131,7 @@ def optimize_model():
     # Compute a mask of non-final states and concatenate the batch elements
     # (a final state would've been the one after which simulation ended)
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                          batch.next_state)), device=device, dtype=torch.bool)
+                                        batch.next_state)), device=device, dtype=torch.bool)
     non_final_next_states = torch.cat([s for s in batch.next_state
                                                 if s is not None])
     state_batch = torch.cat(batch.state)
@@ -166,14 +164,25 @@ def optimize_model():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
 
+#2do: Make classes of optimize and correct methods
 
-num_episodes = 50
-for i_episode in range(num_episodes):
+def train_step(self):
+    #let main loop be in main
+    self.cur_episode += 1
+
+    #update rewards
+    #if game over
+
+    if self.cur_episode>self.n_episode:
+        raise SystemExit(0) 
+    
     # Initialize the environment and state
     env.reset()
     last_screen = get_screen()
     current_screen = get_screen()
     state = current_screen - last_screen
+    #for t in count():
+    
     for t in count():
         # Select and perform an action
         action = select_action(state)
@@ -200,8 +209,8 @@ for i_episode in range(num_episodes):
             episode_durations.append(t + 1)
             plot_durations()
             break
-    # Update the target network, copying all weights and biases in DQN
-    if i_episode % TARGET_UPDATE == 0:
-        target_net.load_state_dict(policy_net.state_dict())
+        # Update the target network, copying all weights and biases in DQN
+        if i_episode % TARGET_UPDATE == 0:
+            target_net.load_state_dict(policy_net.state_dict())
 
-print('Complete')
+    print('Complete')

@@ -4,6 +4,7 @@ from turtle import isvisible  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
 from environment import environment
+from agent import DQN
 
 # Global Variables for the game
 FPS = 32
@@ -242,7 +243,7 @@ if __name__ == "__main__":
 
     elif isVisual:
         old_score = 0
-        cur_state,inputs = game.update(False)
+        cur_state,inputs,isGameOver = game.update(False)
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -257,7 +258,7 @@ if __name__ == "__main__":
                 print(f"Your score is {old_score}")
                 game_audio_sound['point'].play()
 
-            cur_state,inputs = game.update(jump)
+            cur_state,inputs,isGameOver = game.update(jump)
             
             display_screen_window.blit(game_image['background'], (0, 0))
             for pip_upper, pip_lower in zip(inputs[1], inputs[2]):
@@ -279,14 +280,12 @@ if __name__ == "__main__":
             pygame.display.update()
             time_clock.tick(FPS)
 
-
+    
     else:
-        cur_state,inputs = game.update(False)
-        i = 0
+        cur_state,inputs,isGameOver = game.update(False)
+        agent = DQN(len(cur_state), 2, n_episodes=50)
         while True:
+            #jump = agent.train_step(inputs, isGameOver)
             jump = NN(cur_state)
-            cur_state,inputs = game.update(jump)
-            if i>100:
-                break
-            i += 1
+            cur_state,inputs,isGameOver = game.update(jump)
             #Make main game play with read variables

@@ -3,6 +3,7 @@ import random  # For generating random numbers
 class environment:
 
     def __init__(self, scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height):
+        self.isGameOver = False
         self.scr_height = scr_height
         self.scr_width = scr_width
         
@@ -80,6 +81,10 @@ class environment:
 
     def update(self,jump):
         
+        if isGameOver:
+            self.restart()
+            isGameOver = False
+
         if jump:
             if self.p_y > 0:
                 self.p_vx = self.p_flap_accuracy
@@ -92,7 +97,9 @@ class environment:
         if cr_tst:
             #return
             print('Restarting')
-            self.restart()
+            #self.restart()
+            isGameOver = True
+            return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
 
 
         p_middle_positions = self.p_x + self.player_width / 2
@@ -127,7 +134,7 @@ class environment:
             self.up_pips.pop(0)
             self.low_pips.pop(0)
 
-        return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y]
+        return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
 
     def game_State(self):
         x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
