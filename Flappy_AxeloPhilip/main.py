@@ -4,7 +4,7 @@ from turtle import isvisible  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
 from environment import environment
-from agent import badagent
+
 # Global Variables for the game
 FPS = 32
 scr_width = 289
@@ -183,6 +183,12 @@ def get_Random_Pipes():
     ]
     return pipe
 
+def NN(NNInput):
+    print(NNInput)
+
+    probability = 0.1
+    return random.random() < probability
+
 if __name__ == "__main__":
 
     isHumanPlayer = False
@@ -225,32 +231,25 @@ if __name__ == "__main__":
     player_width = game_image['player'].get_width()
     player_height = game_image['player'].get_height()
     base_height = game_image['base'].get_height()
-    #print(scr_width)
-    #print(scr_height)
-    #print(pipe_width)
-    #print(pipe_height)
-    #print(player_width)
-    #print(player_height)
-    #print(base_height)
+
     game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height)
-    
+
     if isHumanPlayer:
         while True:
             welcome_main_screen()  # Shows welcome screen to the user until he presses a button
             main_gameplay(game)  # This is the main game function
     
 
-    #TODO: Implement so trained agent can play 
     elif isVisual:
         old_score = 0
-        cur_state,inputs,isGameOver = game.update(False)
+        cur_state,inputs = game.update(False)
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                     pygame.quit()
                     sys.exit()
 
-            jump = badagent(cur_state)
+            jump = NN(cur_state)
             if jump:
                 game_audio_sound['wing'].play()
             if inputs[0] != old_score:
@@ -258,7 +257,7 @@ if __name__ == "__main__":
                 print(f"Your score is {old_score}")
                 game_audio_sound['point'].play()
 
-            cur_state,inputs,isGameOver = game.update(jump)
+            cur_state,inputs = game.update(jump)
             
             display_screen_window.blit(game_image['background'], (0, 0))
             for pip_upper, pip_lower in zip(inputs[1], inputs[2]):
@@ -279,3 +278,15 @@ if __name__ == "__main__":
 
             pygame.display.update()
             time_clock.tick(FPS)
+
+
+    else:
+        cur_state,inputs = game.update(False)
+        i = 0
+        while True:
+            jump = NN(cur_state)
+            cur_state,inputs = game.update(jump)
+            if i>100:
+                break
+            i += 1
+            #Make main game play with read variables

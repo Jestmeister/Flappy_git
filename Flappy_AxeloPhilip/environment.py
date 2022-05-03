@@ -3,8 +3,6 @@ import random  # For generating random numbers
 class environment:
 
     def __init__(self, scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height):
-        self.isGameOver = False
-        
         self.scr_height = scr_height
         self.scr_width = scr_width
         
@@ -47,9 +45,6 @@ class environment:
 
         self.p_flap_accuracy = -8
         self.p_flap = False
-
-        self.game_State()
-        self.cur_state = [self.x_to_pipe, self.p_y, self.y_of_pipe, self.p_vx]
         
     def is_Colliding(self,p_x, p_y, up_pipes, low_pipes):
         if p_y > self.play_ground - 25 or p_y < 0:
@@ -85,10 +80,6 @@ class environment:
 
     def update(self,jump):
         
-        if self.isGameOver:
-            self.restart()
-            self.isGameOver = False
-
         if jump:
             if self.p_y > 0:
                 self.p_vx = self.p_flap_accuracy
@@ -101,9 +92,7 @@ class environment:
         if cr_tst:
             #return
             print('Restarting')
-            #self.restart()
-            isGameOver = True
-            return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
+            self.restart()
 
 
         p_middle_positions = self.p_x + self.player_width / 2
@@ -138,18 +127,17 @@ class environment:
             self.up_pips.pop(0)
             self.low_pips.pop(0)
 
-        #return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
-        self.game_State()
+        return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y]
 
     def game_State(self):
-        self.x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
-        self.y_of_pipe = self.low_pips[0]['y']
+        x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
+        y_of_pipe = self.low_pips[0]['y']
         for pipe in self.low_pips:
-            if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < self.x_to_pipe:
-                self.x_to_pipe = abs(self.p_x - pipe['x'])
-                self.y_of_pipe = pipe['y']
+            if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < x_to_pipe:
+                x_to_pipe = abs(self.p_x - pipe['x'])
+                y_of_pipe = pipe['y']
 
-        #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
+        return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
         
 
     def restart(self):
@@ -180,8 +168,3 @@ class environment:
 
         self.p_flap_accuracy = -8
         self.p_flap = False
-
-     
-
-
-
