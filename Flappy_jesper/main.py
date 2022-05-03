@@ -232,7 +232,13 @@ if __name__ == "__main__":
     player_width = game_image['player'].get_width()
     player_height = game_image['player'].get_height()
     base_height = game_image['base'].get_height()
-
+    #print(scr_width)
+    #print(scr_height)
+    #print(pipe_width)
+    #print(pipe_height)
+    #print(player_width)
+    #print(player_height)
+    #print(base_height)
     game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height)
 
     if isHumanPlayer:
