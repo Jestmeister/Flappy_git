@@ -102,8 +102,8 @@ class environment:
             #return
             print('Restarting')
             #self.restart()
-            isGameOver = True
-            return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
+            self.isGameOver = True
+            #return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
 
 
         p_middle_positions = self.p_x + self.player_width / 2

@@ -22,7 +22,6 @@ from environment import environment
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
@@ -45,31 +44,34 @@ class ReplayMemory(object):
 
 class DQN(nn.Module):
 
-    def __init__(self, n_inputs, n_actions, n_episodes):
+    def __init__(self, n_inputs, n_actions):
         super(DQN, self).__init__()
         self.fc1    = nn.Linear(n_inputs, 64)  #change to len(self.output)
         self.fc2    = nn.Linear(64, 64)
         self.fc3    = nn.Linear(64, n_actions) #len(actions)
+        #self.myNetwork = nn.Sequential(
+        #nn.Linear(n_inputs, 64),  
+        #nn.Linear(64, 64),
+        #nn.Linear(64, n_actions) 
+        #)
+        
 
-        self.n_episodes = n_episodes
-        self.cur_episode = 0
     
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = x.to(device)    #x = data.float()
+        x = x.to(device)    #x = x.float()
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+        
+        #qValues = self.myNetwork(x)
+        #return torch.sigmoid(qValues)
+        
 
-    #Import some classez
-    def get_input(self,NNInput):
-        self.x_to_pipe = NNInput[0]
-        self.p_y = NNInput[1]
-        self.y_of_pipe = NNInput[2]
-        self.p_vx = NNInput[3]
+
 
 class DQNagent:
     def __init__(self, n_episodes):   
@@ -91,10 +93,13 @@ class DQNagent:
 
         # Get number of actions from gym action space
 
+        
+        
+        self.action = 0
         self.n_actions = 2
 
-        self.policy_net = DQN(4, self.n_actions, self.n_episodes).to(device)
-        self.target_net = DQN(4, self.n_actions, self.n_episodes).to(device)
+        self.policy_net = DQN(4, self.n_actions).to(device)
+        self.target_net = DQN(4, self.n_actions).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -105,15 +110,17 @@ class DQNagent:
         self.episode_durations = []
         self.game = environment(289,511,52,320,34,24,112)
         
-        self.reward_ls = []
+        self.reward_ls = np.zeros(self.n_episodes)
 
 
-    def select_action(self,state):
+    def select_action(self):
         #global steps_done
         sample = random.random()
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
             math.exp(-1. * self.steps_done / self.EPS_DECAY)
         self.steps_done += 1
+
+        '''
         if sample > eps_threshold:
             with torch.no_grad():
                 # t.max(1) will return largest column value of each row.
@@ -122,7 +129,17 @@ class DQNagent:
                 return self.policy_net(state).max(1)[1].view(1, 1)
         else:
             return torch.tensor([[random.randrange(self.n_actions)]], device=device, dtype=torch.long)
-
+        '''
+        #monkey = [False, True]
+        if sample < eps_threshold:
+            #Random
+            #monkey = [False, True]
+            #return random.randint(0,1)
+            self.action = random.randint(0,1)
+        else:
+            #Argmax
+            self.action  = self.target_net(torch.tensor(self.game.cur_state)).argmax().item()  #Dont give optimize a boolean?
+            
 
     
 
@@ -142,7 +159,7 @@ class DQNagent:
         non_final_next_states = torch.cat([s for s in batch.next_state
                                                     if s is not None])
         state_batch = torch.cat(batch.state)
-        action_batch = torch.cat(batch.action)
+        action_batch = torch.cat(batch.action)  #action to contain both 0 and 1?? or -1 and 1?? look @ web
         reward_batch = torch.cat(batch.reward)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
@@ -171,66 +188,46 @@ class DQNagent:
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
+    def read_action(self):
+        if self.action == 0:
+            return False
+        else:
+            return True
 
 
+
+    #Problems with optimize line 168
     def train(self):
-        #let main loop be in main
-        
-
-        #if isGameOver:
-
-        #update rewards
-        #if game over
-
-        
-        
-        # Initialize the environment and state
-        #env.reset()
-        #last_screen = get_screen()
-        #current_screen = get_screen()
-        #state = current_screen - last_screen
-        #state = input
-        #old_state = input
-        #for t in count():
-
-        #self.game.update(False)
-        
         for cur_episode in range(self.n_episodes):
             frames_cleared = 0
-            self.game.restart()
+            self.game.update(False)
             if cur_episode>self.n_episodes:
                 raise SystemExit(0) 
+            print(self.game.isGameOver)
             while not self.game.isGameOver:
                 # Select and perform an action
                 old_state = self.game.cur_state
                 old_state = torch.tensor([old_state])
-                action = self.select_action(self.game.cur_state)
+                self.select_action()
                 #_, reward, done, _ = env.step(action.item())
-                self.game.update(action)
+                self.game.update(self.read_action())
                 state = self.game.cur_state
                 state = torch.tensor([state])
-                if self.game.isGameOver:
-                    reward = 0
+                
                 frames_cleared += 1
                 reward = frames_cleared + self.game.score*10
+                if self.game.isGameOver:
+                    reward = 0
+                    
                 reward = torch.tensor([reward], device=device)
+                action = torch.tensor([self.action], device=device)
 
-                # Observe new state
-                #Send action to board and get new state
-                #define a enivornment and use this as a training method instead???
-
-                '''
-                last_screen = current_screen
-                current_screen = get_screen()
-                if not done:
-                    next_state = current_screen - last_screen
-                else:
-                    next_state = None
-                '''
                 # Store the transition in memory
                 self.memory.push(old_state, action, state , reward)
-                self.reward_ls.append(reward)
-                # Move to the next state
+
+                #Ify
+                self.reward_ls[cur_episode] += reward
+                
                 
 
                 # Perform one step of the optimization (on the policy network)
