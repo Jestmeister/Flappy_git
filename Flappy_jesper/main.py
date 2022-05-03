@@ -4,7 +4,7 @@ from turtle import isvisible  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
 from environment import environment
-from agent import DQN
+from agent import DQN, DQNagent
 
 # Global Variables for the game
 FPS = 32
@@ -193,7 +193,7 @@ def NN(NNInput):
 if __name__ == "__main__":
 
     isHumanPlayer = False
-    isVisual = True
+    isVisual = False
 
     pygame.init()
     time_clock = pygame.time.Clock()
@@ -240,13 +240,14 @@ if __name__ == "__main__":
     #print(player_height)
     #print(base_height)
     game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height)
-
+    
     if isHumanPlayer:
         while True:
             welcome_main_screen()  # Shows welcome screen to the user until he presses a button
             main_gameplay(game)  # This is the main game function
     
 
+    #TODO: Implement so trained agent can play 
     elif isVisual:
         old_score = 0
         cur_state,inputs,isGameOver = game.update(False)
@@ -288,6 +289,7 @@ if __name__ == "__main__":
 
     
     else:
+        '''
         cur_state,inputs,isGameOver = game.update(False)
         agent = DQN(len(cur_state), 2, n_episodes=50)
         while True:
@@ -295,3 +297,6 @@ if __name__ == "__main__":
             jump = NN(cur_state)
             cur_state,inputs,isGameOver = game.update(jump)
             #Make main game play with read variables
+        '''
+        agent = DQNagent(n_episodes=100)
+        agent.train()

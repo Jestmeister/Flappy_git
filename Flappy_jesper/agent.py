@@ -72,13 +72,15 @@ class DQN(nn.Module):
         self.p_vx = NNInput[3]
 
 class DQNagent:
-    def __init__(self):   
+    def __init__(self, n_episodes):   
         self.BATCH_SIZE = 128
         self.GAMMA = 0.999
         self.EPS_START = 0.9
         self.EPS_END = 0.05
         self.EPS_DECAY = 200
         self.TARGET_UPDATE = 10
+
+        self.n_episodes = n_episodes
 
         # Get screen size so that we can initialize layers correctly based on shape
         # returned from AI gym. Typical dimensions at this point are close to 3x40x90
@@ -91,8 +93,8 @@ class DQNagent:
 
         self.n_actions = 2
 
-        self.policy_net = DQN(4, self.n_actions).to(device)
-        self.target_net = DQN(4, self.n_actions).to(device)
+        self.policy_net = DQN(4, self.n_actions, self.n_episodes).to(device)
+        self.target_net = DQN(4, self.n_actions, self.n_episodes).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -102,7 +104,8 @@ class DQNagent:
         self.steps_done = 0
         self.episode_durations = []
         self.game = environment(289,511,52,320,34,24,112)
-        self.n_episodes = 100
+        
+        self.reward_ls = []
 
 
     def select_action(self,state):
@@ -172,15 +175,14 @@ class DQNagent:
 
     def train(self):
         #let main loop be in main
-        self.cur_episode += 1
+        
 
         #if isGameOver:
 
         #update rewards
         #if game over
 
-        if self.cur_episode>self.n_episodes:
-            raise SystemExit(0) 
+        
         
         # Initialize the environment and state
         #env.reset()
@@ -188,13 +190,29 @@ class DQNagent:
         #current_screen = get_screen()
         #state = current_screen - last_screen
         #state = input
-        old_state = input
+        #old_state = input
         #for t in count():
-        for chunga in range(self.n_episodes):
+
+        #self.game.update(False)
+        
+        for cur_episode in range(self.n_episodes):
+            frames_cleared = 0
+            self.game.restart()
+            if cur_episode>self.n_episodes:
+                raise SystemExit(0) 
             while not self.game.isGameOver:
                 # Select and perform an action
-                action = self.select_action(state)
+                old_state = self.game.cur_state
+                old_state = torch.tensor([old_state])
+                action = self.select_action(self.game.cur_state)
                 #_, reward, done, _ = env.step(action.item())
+                self.game.update(action)
+                state = self.game.cur_state
+                state = torch.tensor([state])
+                if self.game.isGameOver:
+                    reward = 0
+                frames_cleared += 1
+                reward = frames_cleared + self.game.score*10
                 reward = torch.tensor([reward], device=device)
 
                 # Observe new state
@@ -210,19 +228,16 @@ class DQNagent:
                     next_state = None
                 '''
                 # Store the transition in memory
-                self.memory.push(state, action, next_state, reward)
-
+                self.memory.push(old_state, action, state , reward)
+                self.reward_ls.append(reward)
                 # Move to the next state
-                state = next_state
+                
 
                 # Perform one step of the optimization (on the policy network)
                 self.optimize_model()
-                if done:
-                    self.episode_durations.append(t + 1)
-                    plot_durations()
-                    break
-                    # Update the target network, copying all weights and biases in DQN
-                    if i_episode % TARGET_UPDATE == 0:
-                        self.target_net.load_state_dict(self.policy_net.state_dict())
+                
+        # Update the target network, copying all weights and biases in DQN
+        if cur_episode % self.TARGET_UPDATE == 0:
+            self.target_net.load_state_dict(self.policy_net.state_dict())
 
         print('Complete')
