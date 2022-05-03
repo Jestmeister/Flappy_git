@@ -4,8 +4,7 @@ from turtle import isvisible  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
 from environment import environment
-from agent import DQN, DQNagent
-
+from agent import badagent
 # Global Variables for the game
 FPS = 32
 scr_width = 289
@@ -184,12 +183,6 @@ def get_Random_Pipes():
     ]
     return pipe
 
-def NN(NNInput):
-    print(NNInput)
-
-    probability = 0.1
-    return random.random() < probability
-
 if __name__ == "__main__":
 
     isHumanPlayer = False
@@ -257,7 +250,7 @@ if __name__ == "__main__":
                     pygame.quit()
                     sys.exit()
 
-            jump = NN(cur_state)
+            jump = badagent(cur_state)
             if jump:
                 game_audio_sound['wing'].play()
             if inputs[0] != old_score:
@@ -286,17 +279,3 @@ if __name__ == "__main__":
 
             pygame.display.update()
             time_clock.tick(FPS)
-
-    
-    else:
-        '''
-        cur_state,inputs,isGameOver = game.update(False)
-        agent = DQN(len(cur_state), 2, n_episodes=50)
-        while True:
-            #jump = agent.train_step(inputs, isGameOver)
-            jump = NN(cur_state)
-            cur_state,inputs,isGameOver = game.update(jump)
-            #Make main game play with read variables
-        '''
-        agent = DQNagent(n_episodes=100)
-        agent.train()
