@@ -78,6 +78,8 @@ def main():
 
             action = action.data.numpy().astype(int)[0]
             next_state, reward, done, _ = env.step(action)
+            print(action)
+            print(type(action))
             print(next_state, reward, done, _)
             env.render(mode='rgb_array')
 
@@ -124,6 +126,7 @@ def main():
             for i in range(steps):
                 state = state_pool[i]
                 action = Variable(torch.FloatTensor([action_pool[i]]))
+                print(action)
                 reward = reward_pool[i]
 
                 probs = policy_net(state)

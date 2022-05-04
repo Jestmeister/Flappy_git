@@ -98,7 +98,7 @@ class Game:
 
 
     def Update(self, jump):
-        if jump:
+        if jump == 1:
             if self.p_y > 0:
                 self.p_vx = self.p_flap_accuracy
                 self.p_flap = True
