@@ -94,6 +94,8 @@ class Game:
 
         self.gameover = False
 
+        return self.game_State(True)
+
 
     def Update(self, jump):
         if jump:
@@ -168,9 +170,9 @@ class Game:
             if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < x_to_pipe:
                 x_to_pipe = abs(self.p_x - pipe['x'])
 
-        return self.game_State()
+        return self.game_State(False)
     
-    def game_State(self):
+    def game_State(self, only_state):
         x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
         y_of_pipe = self.low_pips[0]['y']
         for pipe in self.low_pips:
@@ -180,6 +182,8 @@ class Game:
 
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
         next_state = np.array([x_to_pipe, self.p_y, y_of_pipe, self.p_vx])
+        if only_state:
+            return next_state
 
         reward = self.score
 

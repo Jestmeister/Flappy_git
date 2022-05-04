@@ -66,8 +66,7 @@ def main():
 
 
     for e in range(num_episode):
-        env.Start(True, True)
-        state = env.Update(False)
+        state = env.Start(True, True)
         state = torch.from_numpy(state).float()
         state = Variable(state)
         #env.render(mode='rgb_array')
