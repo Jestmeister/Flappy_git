@@ -93,14 +93,13 @@ class environment:
             if self.p_y > 0:
                 self.p_vx = self.p_flap_accuracy
                 self.p_flap = True
-                print('jumpin')
-                #game_audio_sound['wing'].play()
+                #print('jumpin')
+    
 
         cr_tst = self.is_Colliding(self.p_x, self.p_y, self.up_pips,
                               self.low_pips)
         if cr_tst:
-            #return
-            print('Restarting')
+            #print('Restarting')
             #self.restart()
             self.isGameOver = True
             #return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver

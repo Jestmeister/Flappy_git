@@ -2,12 +2,8 @@
 import math
 import random
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
 from collections import namedtuple, deque
-from itertools import count
-from PIL import Image
-import pygame
 
 import torch
 import torch.nn as nn
@@ -165,7 +161,8 @@ class DQNagent:
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
-        state_action_values = self.policy_net(state_batch).gather(1, action_batch)
+       
+        state_action_values = self.policy_net(state_batch).gather(1, action_batch.reshape(action_batch.size()[0],1))
 
         # Compute V(s_{t+1}) for all next states.
         # Expected values of actions for non_final_next_states are computed based
@@ -194,16 +191,21 @@ class DQNagent:
         else:
             return True
 
-
-
-    #Problems with optimize line 168
+    #Possible improvements:
+    #Add punishment for next state being a death?
+    #Epsilon greedy change in epsilon decay?
+    #Parameter tuning?
+    #Correct reward function?
+    #Correct loss function?
+    #Correct optimizer?
     def train(self):
         for cur_episode in range(self.n_episodes):
+            if (cur_episode+1) % 10 == 0:    
+                print(cur_episode+1)
             frames_cleared = 0
+            reward = 1
+            
             self.game.update(False)
-            if cur_episode>self.n_episodes:
-                raise SystemExit(0) 
-            print(self.game.isGameOver)
             while not self.game.isGameOver:
                 # Select and perform an action
                 old_state = self.game.cur_state
@@ -215,10 +217,13 @@ class DQNagent:
                 state = torch.tensor([state])
                 
                 frames_cleared += 1
-                reward = frames_cleared + self.game.score*10
+                #reward = frames_cleared #+ self.game.score*100
+                
                 if self.game.isGameOver:
-                    reward = 0
-                    
+                    self.reward_ls[cur_episode] = frames_cleared
+                    reward = -10
+                
+                
                 reward = torch.tensor([reward], device=device)
                 action = torch.tensor([self.action], device=device)
 
@@ -226,15 +231,20 @@ class DQNagent:
                 self.memory.push(old_state, action, state , reward)
 
                 #Ify
-                self.reward_ls[cur_episode] += reward
+                
                 
                 
 
                 # Perform one step of the optimization (on the policy network)
                 self.optimize_model()
-                
-        # Update the target network, copying all weights and biases in DQN
-        if cur_episode % self.TARGET_UPDATE == 0:
-            self.target_net.load_state_dict(self.policy_net.state_dict())
-
+        
+            # Update the target network, copying all weights and biases in DQN
+            if cur_episode % self.TARGET_UPDATE == 0:
+                self.target_net.load_state_dict(self.policy_net.state_dict())
+            
+        
         print('Complete')
+        plt.plot(self.reward_ls)
+        plt.xlabel('Episode')
+        plt.ylabel('Score')
+        plt.show()
