@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pdb
 
+import random
+
 #import gym
 import envenvironment
 
@@ -66,7 +68,7 @@ def main():
 
 
     for e in range(num_episode):
-        state = env.Start(True, True)
+        state = env.Start(True, False)
         state = torch.from_numpy(state).float()
         state = Variable(state)
         #env.render(mode='rgb_array')
@@ -78,6 +80,9 @@ def main():
             action = m.sample()
 
             action = action.data.numpy().astype(int)[0]
+            probability = 0.1
+            if random.random() < probability:
+                action = random.randint(0, 1)
             next_state, reward, done = env.Update(action)
             #env.render(mode='rgb_array')
 
