@@ -1,8 +1,11 @@
 
 import random  # For generating random numbers
-import sys  # We will use sys.exit to exit the program
+import sys
+from turtle import done  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
+
+import numpy as np
 
 
 
@@ -89,6 +92,8 @@ class Game:
         self.p_flap_accuracy = -8
         self.p_flap = False
 
+        self.gameover = False
+
 
     def Update(self, jump):
         if jump:
@@ -100,7 +105,7 @@ class Game:
         cr_tst = self.is_Colliding(self.p_x, self.p_y, self.up_pips,
                               self.low_pips)
         if cr_tst:
-            return
+            self.gameover = True
 
 
         self.p_middle_positions = self.p_x + self.game_image['player'].get_width() / 2
@@ -173,7 +178,14 @@ class Game:
                 x_to_pipe = abs(self.p_x - pipe['x'])
                 y_of_pipe = pipe['y']
 
-        return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
+        #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
+        next_state = np.array([x_to_pipe, self.p_y, y_of_pipe, self.p_vx])
+
+        reward = self.score
+
+        done = self.gameover
+
+        return next_state, reward, done
         
     def is_Colliding(self, p_x, p_y, up_pipes, low_pipes):
         if p_y > self.play_ground - 25 or p_y < 0:

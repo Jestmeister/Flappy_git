@@ -66,8 +66,8 @@ def main():
 
 
     for e in range(num_episode):
-
-        state = env.Start()
+        env.Start(True, True)
+        state = env.Update(False)
         state = torch.from_numpy(state).float()
         state = Variable(state)
         #env.render(mode='rgb_array')
@@ -79,7 +79,7 @@ def main():
             action = m.sample()
 
             action = action.data.numpy().astype(int)[0]
-            next_state, reward, done, _ = env.Update(action)
+            next_state, reward, done = env.Update(action)
             #env.render(mode='rgb_array')
 
             # To mark boundarys between episodes
