@@ -21,7 +21,7 @@ class PolicyNet(nn.Module):
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = F.sigmoid(self.fc3(x))
+        x = torch.sigmoid(self.fc3(x))
         return x
 
 
@@ -52,7 +52,7 @@ def main():
     learning_rate = 0.01
     gamma = 0.99
 
-    env = gym.make('CartPole-v0')
+    env = gym.make('CartPole-v1')
     policy_net = PolicyNet()
     optimizer = torch.optim.RMSprop(policy_net.parameters(), lr=learning_rate)
 
