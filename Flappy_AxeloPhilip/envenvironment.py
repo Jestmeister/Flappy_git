@@ -185,7 +185,7 @@ class Game:
         if only_state:
             return next_state
 
-        reward = self.score
+        reward = self.p_x #self.score
 
         done = self.gameover
 
