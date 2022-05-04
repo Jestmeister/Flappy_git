@@ -6,8 +6,10 @@ from torch.autograd import Variable
 from itertools import count
 import matplotlib.pyplot as plt
 import numpy as np
-import gym
 import pdb
+
+#import gym
+import envenvironment
 
 
 class PolicyNet(nn.Module):
@@ -52,7 +54,7 @@ def main():
     learning_rate = 0.01
     gamma = 0.99
 
-    env = gym.make('CartPole-v0')
+    env = envenvironment.Game()
     policy_net = PolicyNet()
     optimizer = torch.optim.RMSprop(policy_net.parameters(), lr=learning_rate)
 
@@ -65,10 +67,10 @@ def main():
 
     for e in range(num_episode):
 
-        state = env.reset()
+        state = env.Start()
         state = torch.from_numpy(state).float()
         state = Variable(state)
-        env.render(mode='rgb_array')
+        #env.render(mode='rgb_array')
 
         for t in count():
 
@@ -77,8 +79,8 @@ def main():
             action = m.sample()
 
             action = action.data.numpy().astype(int)[0]
-            next_state, reward, done, _ = env.step(action)
-            env.render(mode='rgb_array')
+            next_state, reward, done, _ = env.Update(action)
+            #env.render(mode='rgb_array')
 
             # To mark boundarys between episodes
             if done:
