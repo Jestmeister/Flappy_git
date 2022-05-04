@@ -52,7 +52,7 @@ def main():
 
     # Parameters
     num_episode = 5000
-    batch_size = 5
+    batch_size = 500
     learning_rate = 0.01
     gamma = 0.99
 

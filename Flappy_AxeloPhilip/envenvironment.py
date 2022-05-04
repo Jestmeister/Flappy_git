@@ -115,7 +115,7 @@ class Game:
             self.pip_middle_positions = pipe['x'] + self.game_image['pipe'][0].get_width() / 2
             if self.pip_middle_positions <= self.p_middle_positions < self.pip_middle_positions + 4:
                 self.score += 1
-                print(f"Your score is {self.score}")
+                #print(f"Your score is {self.score}")
                 self.game_audio_sound['point'].play()
 
         if self.p_vx < self.p_mvx and not self.p_flap:
@@ -185,7 +185,7 @@ class Game:
         if only_state:
             return next_state
 
-        reward = self.p_x #self.score
+        reward = 1 #self.p_x #self.score
 
         done = self.gameover
 
