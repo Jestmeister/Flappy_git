@@ -80,7 +80,7 @@ def main():
             action = m.sample()
 
             action = action.data.numpy().astype(int)[0]
-            probability = 0.1
+            probability = 1 / (t + 1)
             if random.random() < probability:
                 action = random.randint(0, 1)
             next_state, reward, done = env.Update(action)
