@@ -12,10 +12,12 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 
 from environment import environment
+import pandas as pd
 
 #https://pythonprogramming.net/training-deep-q-learning-dqn-reinforcement-learning-python-tutorial/?completed=/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 #https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
 
+#TODO: Save weights and read in weights
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
@@ -135,7 +137,8 @@ class DQNagent:
         else:
             #Argmax
             self.action  = self.target_net(torch.tensor(self.game.cur_state)).argmax().item()  #Dont give optimize a boolean?
-            
+            #with torch.no_grad():
+            #    self.action = self.policy_net(torch.tensor(self.game.cur_state)).max(1)[1].view(1, 1)
 
     
 
@@ -155,7 +158,7 @@ class DQNagent:
         non_final_next_states = torch.cat([s for s in batch.next_state
                                                     if s is not None])
         state_batch = torch.cat(batch.state)
-        action_batch = torch.cat(batch.action)  #action to contain both 0 and 1?? or -1 and 1?? look @ web
+        action_batch = torch.cat(batch.action)  
         reward_batch = torch.cat(batch.reward)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
@@ -175,14 +178,15 @@ class DQNagent:
         expected_state_action_values = (next_state_values * self.GAMMA) + reward_batch
 
         # Compute Huber loss
-        criterion = nn.SmoothL1Loss()
+        #criterion = nn.SmoothL1Loss()
+        criterion = nn.MSELoss()
         loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
         for param in self.policy_net.parameters():
-            param.grad.data.clamp_(-1, 1)
+            param.grad.data.clamp_(-1, 1)       #Nummerical clipping the outputs
         self.optimizer.step()
 
     def read_action(self):
@@ -190,6 +194,11 @@ class DQNagent:
             return False
         else:
             return True
+
+    #Outputs -1 and 1???
+    #Set seeds for same pipes all the time???
+    #Select action calls in correct net? (traget)
+    #Change network structure?
 
     #Possible improvements:
     #Add punishment for next state being a death?
@@ -211,7 +220,7 @@ class DQNagent:
                 old_state = self.game.cur_state
                 old_state = torch.tensor([old_state])
                 self.select_action()
-                #_, reward, done, _ = env.step(action.item())
+                
                 self.game.update(self.read_action())
                 state = self.game.cur_state
                 state = torch.tensor([state])
@@ -230,11 +239,6 @@ class DQNagent:
                 # Store the transition in memory
                 self.memory.push(old_state, action, state , reward)
 
-                #Ify
-                
-                
-                
-
                 # Perform one step of the optimization (on the policy network)
                 self.optimize_model()
         
@@ -244,7 +248,15 @@ class DQNagent:
             
         
         print('Complete')
+
+        window_size = 100
+        numbers_series = pd.Series(self.reward_ls)
+        moving_averages = numbers_series.rolling(window_size).mean()
+        moving_averages_list = moving_averages.tolist()
+        final_list = moving_averages_list[window_size - 1:]
+
         plt.plot(self.reward_ls)
+        plt.plot(range(window_size-1,len(self.reward_ls)),final_list)
         plt.xlabel('Episode')
         plt.ylabel('Score')
         plt.show()
