@@ -52,7 +52,7 @@ def main():
 
     # Parameters
     num_episode = 5000
-    batch_size = 500
+    batch_size = 100
     learning_rate = 0.01
     gamma = 0.99
 
@@ -80,16 +80,20 @@ def main():
             action = m.sample()
 
             action = action.data.numpy().astype(int)[0]
-            probability = 2 / (t + 1)
-            #print(probability)
-            if random.random() < probability:
-                action = random.randint(0, 1)
+
+            if e < 1000:
+                probability = 0.1
+                if random.random() < probability:
+                    action = 1
+                else:
+                    action = 0
+
             next_state, reward, done = env.Update(action)
             #env.render(mode='rgb_array')
 
             # To mark boundarys between episodes
             if done:
-                reward = 0
+                reward = -100
 
             state_pool.append(state)
             action_pool.append(float(action))
