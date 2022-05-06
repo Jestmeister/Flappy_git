@@ -13,6 +13,7 @@ import torchvision.transforms as T
 
 from environment import environment
 import pandas as pd
+import copy as cp
 
 #https://pythonprogramming.net/training-deep-q-learning-dqn-reinforcement-learning-python-tutorial/?completed=/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 #https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
@@ -42,11 +43,11 @@ class ReplayMemory(object):
 
 class DQN(nn.Module):
 
-    def __init__(self, n_inputs, n_actions):
+    def __init__(self, n_inputs, n_actions, n_hidden):
         super(DQN, self).__init__()
-        self.fc1    = nn.Linear(n_inputs, 64)  #change to len(self.output)
-        self.fc2    = nn.Linear(64, 64)
-        self.fc3    = nn.Linear(64, n_actions) #len(actions)
+        self.fc1    = nn.Linear(n_inputs, n_hidden)  #change to len(self.output)
+        self.fc2    = nn.Linear(n_hidden, n_hidden)
+        self.fc3    = nn.Linear(n_hidden, n_actions) #len(actions)
         #self.myNetwork = nn.Sequential(
         #nn.Linear(n_inputs, 64),  
         #nn.Linear(64, 64),
@@ -81,23 +82,18 @@ class DQNagent:
         self.TARGET_UPDATE = 30
 
         self.n_episodes = n_episodes
+        self.difficulty = 0
 
-        # Get screen size so that we can initialize layers correctly based on shape
-        # returned from AI gym. Typical dimensions at this point are close to 3x40x90
-        # which is the result of a clamped and down-scaled render buffer in get_screen()
+        self.game = environment(289,511,52,320,34,24,112,difficulty = self.difficulty)
 
-        #init_screen = get_screen()
-        #_, _, screen_height, screen_width = init_screen.shape
-
-        # Get number of actions from gym action space
-
-        
-        
         self.action = 0
-        self.n_actions = 2
 
-        self.policy_net = DQN(4, self.n_actions).to(device)
-        self.target_net = DQN(4, self.n_actions).to(device)
+        n_actions = 2
+        n_hidden = 64
+        n_input = len(self.game.cur_state)
+
+        self.policy_net = DQN(n_input, n_actions,n_hidden).to(device)
+        self.target_net = DQN(n_input, n_actions,n_hidden).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -105,8 +101,7 @@ class DQNagent:
         self.memory = ReplayMemory(10000)
 
         self.steps_done = 0
-        self.episode_durations = []
-        self.game = environment(289,511,52,320,34,24,112,difficulty = 0)
+        
         
         self.reward_ls = np.zeros(self.n_episodes)
 
@@ -137,6 +132,7 @@ class DQNagent:
         else:
             #Argmax
             self.action  = self.target_net(torch.tensor(self.game.cur_state)).argmax().item()  #Dont give optimize a boolean?
+        #print(self.action)
             #with torch.no_grad():
             #    self.action = self.policy_net(torch.tensor(self.game.cur_state)).max(1)[1].view(1, 1)
 
@@ -200,7 +196,8 @@ class DQNagent:
     #Set seeds for same pipes all the time??? (Ez mode activated)
     #Select action calls in correct net? (traget)
     #Change network structure?
-    #Correct inputs???
+    #Correct inputs??? <------------  MORE INPUTS NEEDED
+    #Use copy so nothing gets over written?? Fuck python
 
     #Possible improvements:
     #Add punishment for next state being a death? (Did something with expected reward in optimize with term)
@@ -210,22 +207,29 @@ class DQNagent:
     #Correct loss function?
     #Correct optimizer?
     def train(self):
+        ramp_up = False
         for cur_episode in range(self.n_episodes):
             if (cur_episode+1) % 10 == 0:    
                 print(cur_episode+1)
+            if ramp_up:
+                print('Rampin that booty up!')
+                ramp_up = False
+                self.difficulty += 1
+                self.game = environment(289,511,52,320,34,24,112,difficulty = self.difficulty)
             frames_cleared = 0
             reward = 1
             #term = torch.tensor([1])
             self.game.update(False)
             while not self.game.isGameOver:
                 # Select and perform an action
-                old_state = self.game.cur_state
-                old_state = torch.tensor([old_state])
+                old_state = cp.deepcopy(torch.tensor([self.game.cur_state]))
+                #print(old_state)
+                #old_state = torch.tensor([old_state])
                 self.select_action()
                 
                 self.game.update(self.read_action())
-                state = self.game.cur_state
-                state = torch.tensor([state])
+                state = cp.deepcopy(torch.tensor([self.game.cur_state]))
+                #state = torch.tensor([state])
                 
                 frames_cleared += 1
                 #reward = frames_cleared #+ self.game.score*100
@@ -234,16 +238,23 @@ class DQNagent:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = -100
                     #term = torch.tensor([0])
-                
+                if self.game.score == 200:
+                    self.reward_ls[cur_episode] = frames_cleared
+                    reward = 100
+                    ramp_up = True
                 
                 reward = torch.tensor([reward], device=device)
-                action = torch.tensor([self.action], device=device)
+                action = cp.deepcopy(torch.tensor([self.action], device=device))
 
                 # Store the transition in memory
                 self.memory.push(old_state, action, state , reward)
 
                 # Perform one step of the optimization (on the policy network)
                 self.optimize_model()
+
+                if ramp_up:
+                    #self.game.restart()
+                    break
         
             # Update the target network, copying all weights and biases in DQN
             if cur_episode % self.TARGET_UPDATE == 0:

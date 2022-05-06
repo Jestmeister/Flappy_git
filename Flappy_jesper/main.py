@@ -5,6 +5,7 @@ import pygame
 from pygame.locals import *  # Basic pygame imports
 from environment import environment
 from agent import DQN, DQNagent
+import copy as cp
 
 # Global Variables for the game
 FPS = 32
@@ -57,7 +58,7 @@ def main_gameplay(game):
 
     n_pip1 = get_Random_Pipes()
     n_pip2 = get_Random_Pipes()
-
+    #n_pip2 = cp.deepcopy(n_pip1)
 
     up_pips = [
         {'x': scr_width + 200, 'y': n_pip1[0]['y']},
@@ -179,6 +180,7 @@ def get_Random_Pipes():
     yes2 = off_s + random.randrange(0, int(scr_height - game_image['base'].get_height() - 1.2 * off_s))
     yes2 = off_s
     pipeX = scr_width + 10
+    pipeX = 2*scr_width
     y1 = pip_h - yes2 + off_s
     pipe = [
         {'x': pipeX, 'y': -y1},  # upper Pipe
