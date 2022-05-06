@@ -2,9 +2,10 @@ import random  # For generating random numbers
 
 class environment:
 
-    def __init__(self, scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height):
+    def __init__(self, scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,difficulty):
         self.isGameOver = False
-        
+        self.difficulty = difficulty    #Difficulty from 0 to 1
+
         self.scr_height = scr_height
         self.scr_width = scr_width
         
@@ -72,9 +73,14 @@ class environment:
         """
         Generate positions of two pipes(one bottom straight and one top rotated ) for blitting on the screen
         """
+
         pip_h = self.pipe_height
-        off_s = self.scr_height / 3
-        yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
+        if self.difficulty == 0:
+            off_s = self.scr_height / 2
+            yes2 = off_s
+        elif self.difficulty == 1:
+            off_s = self.scr_height / 3
+            yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
         pipeX = self.scr_width + 10
         y1 = pip_h - yes2 + off_s
         pipe = [
@@ -179,8 +185,3 @@ class environment:
 
         self.p_flap_accuracy = -8
         self.p_flap = False
-
-     
-
-
-

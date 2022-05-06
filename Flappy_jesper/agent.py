@@ -75,10 +75,10 @@ class DQNagent:
     def __init__(self, n_episodes):   
         self.BATCH_SIZE = 128
         self.GAMMA = 0.999
-        self.EPS_START = 0.9
-        self.EPS_END = 0.05
-        self.EPS_DECAY = 200
-        self.TARGET_UPDATE = 10
+        self.EPS_START = 0.95
+        self.EPS_END = 0.001
+        self.EPS_DECAY = 50
+        self.TARGET_UPDATE = 30
 
         self.n_episodes = n_episodes
 
@@ -106,7 +106,7 @@ class DQNagent:
 
         self.steps_done = 0
         self.episode_durations = []
-        self.game = environment(289,511,52,320,34,24,112)
+        self.game = environment(289,511,52,320,34,24,112,difficulty = 0)
         
         self.reward_ls = np.zeros(self.n_episodes)
 
@@ -160,6 +160,7 @@ class DQNagent:
         state_batch = torch.cat(batch.state)
         action_batch = torch.cat(batch.action)  
         reward_batch = torch.cat(batch.reward)
+        #term_batch = torch.cat(batch.term)
 
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
@@ -175,7 +176,7 @@ class DQNagent:
         next_state_values = torch.zeros(self.BATCH_SIZE, device=device)
         next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
         # Compute the expected Q values
-        expected_state_action_values = (next_state_values * self.GAMMA) + reward_batch
+        expected_state_action_values = (next_state_values * self.GAMMA) + reward_batch  #Add term did nothing...
 
         # Compute Huber loss
         #criterion = nn.SmoothL1Loss()
@@ -196,12 +197,13 @@ class DQNagent:
             return True
 
     #Outputs -1 and 1???
-    #Set seeds for same pipes all the time???
+    #Set seeds for same pipes all the time??? (Ez mode activated)
     #Select action calls in correct net? (traget)
     #Change network structure?
+    #Correct inputs???
 
     #Possible improvements:
-    #Add punishment for next state being a death?
+    #Add punishment for next state being a death? (Did something with expected reward in optimize with term)
     #Epsilon greedy change in epsilon decay?
     #Parameter tuning?
     #Correct reward function?
@@ -213,7 +215,7 @@ class DQNagent:
                 print(cur_episode+1)
             frames_cleared = 0
             reward = 1
-            
+            #term = torch.tensor([1])
             self.game.update(False)
             while not self.game.isGameOver:
                 # Select and perform an action
@@ -230,7 +232,8 @@ class DQNagent:
                 
                 if self.game.isGameOver:
                     self.reward_ls[cur_episode] = frames_cleared
-                    reward = -10
+                    reward = -100
+                    #term = torch.tensor([0])
                 
                 
                 reward = torch.tensor([reward], device=device)

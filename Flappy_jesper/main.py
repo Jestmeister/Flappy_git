@@ -175,7 +175,9 @@ def get_Random_Pipes():
     """
     pip_h = game_image['pipe'][0].get_height()
     off_s = scr_height / 3
+    off_s = scr_height / 2
     yes2 = off_s + random.randrange(0, int(scr_height - game_image['base'].get_height() - 1.2 * off_s))
+    yes2 = off_s
     pipeX = scr_width + 10
     y1 = pip_h - yes2 + off_s
     pipe = [
@@ -192,7 +194,7 @@ def NN(NNInput):
 
 if __name__ == "__main__":
 
-    isHumanPlayer = False
+    isHumanPlayer = True
     isVisual = False
 
     pygame.init()
@@ -239,7 +241,7 @@ if __name__ == "__main__":
     #print(player_width)
     #print(player_height)
     #print(base_height)
-    game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height)
+    game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,0)
     
     if isHumanPlayer:
         while True:
