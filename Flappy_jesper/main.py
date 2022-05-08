@@ -7,6 +7,7 @@ from scipy.fftpack import diff  # Basic pygame imports
 from environment import environment
 from agent import DQN, DQNagent
 import copy as cp
+import torch
 
 # Global Variables for the game
 FPS = 32
@@ -197,9 +198,15 @@ def NN(NNInput):
     probability = 0.1
     return random.random() < probability
 
+def read_action(action):
+        if action == 0:
+            return False
+        else:
+            return True
+
 if __name__ == "__main__":
 
-    isHumanPlayer = True
+    isHumanPlayer = False
     isVisual = True
 
     pygame.init()
@@ -246,7 +253,7 @@ if __name__ == "__main__":
     #print(player_width)
     #print(player_height)
     #print(base_height)
-    game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,difficulty=3)
+    game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,difficulty=4)
     
     if isHumanPlayer:
         while True:
@@ -258,6 +265,10 @@ if __name__ == "__main__":
     elif isVisual:
         old_score = 0
         #cur_state,inputs,isGameOver = game.update(False)
+        agent = DQNagent(0,0)
+        model = DQN(agent.n_input, agent.n_actions, agent.n_hidden)
+        model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
+        model.eval()
         game.update(False)
         while True:
             for event in pygame.event.get():
@@ -265,15 +276,18 @@ if __name__ == "__main__":
                     pygame.quit()
                     sys.exit()
 
-            jump = NN(game.cur_state)
-            if jump:
+            #jump = NN(game.cur_state)
+            state = torch.tensor(game.cur_state)
+            action  = model(state).argmax().item()
+            
+            if read_action(action):
                 game_audio_sound['wing'].play()
             if game.score != old_score:
                 old_score = game.score
                 print(f"Your score is {old_score}")
                 game_audio_sound['point'].play()
 
-            game.update(jump)
+            game.update(read_action(action))
             
             display_screen_window.blit(game_image['background'], (0, 0))
             for pip_upper, pip_lower in zip(game.up_pips, game.low_pips):
@@ -306,5 +320,5 @@ if __name__ == "__main__":
             cur_state,inputs,isGameOver = game.update(jump)
             #Make main game play with read variables
         '''
-        agent = DQNagent(n_episodes=100)
+        agent = DQNagent(n_episodes=100,start_difficulty=0)
         agent.train()

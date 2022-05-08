@@ -1,5 +1,6 @@
 import random  # For generating random numbers
 import copy as cp
+import numpy as np
 
 class environment:
 
@@ -81,22 +82,27 @@ class environment:
         """
 
         pip_h = self.pipe_height
+        #Constant hight on pipes
         if self.difficulty == 0:
             off_s = self.scr_height / 2
             yes2 = off_s
             pipeX = self.scr_width + 10
+        #Random pipes with big gaps and far apart
         elif self.difficulty == 1:
             off_s = self.scr_height / 2
             yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
-            pipeX = 2 * self.scr_width
+            pipeX = 1.5 * self.scr_width #must be int???
+        #Random pipes with big gaps
         elif self.difficulty == 2:
             off_s = self.scr_height / 2
             yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
             pipeX = self.scr_width + 10
+        #Random pipes smaller gap
         elif self.difficulty == 3:
-            off_s = int(self.scr_height / 2.3)
+            off_s = np.floor(self.scr_height / 2.4)
             yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
             pipeX = self.scr_width + 10
+        #Real deal
         elif self.difficulty == 4:
             off_s = self.scr_height / 3
             yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))

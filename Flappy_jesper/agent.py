@@ -1,6 +1,7 @@
 #import gym
 import math
 import random
+from tokenize import Double
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import namedtuple, deque
@@ -60,7 +61,8 @@ class DQN(nn.Module):
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = x.to(device)    #x = x.float()
+        #x = x.to(device)    #
+        x = x.float()
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -73,27 +75,27 @@ class DQN(nn.Module):
 
 
 class DQNagent:
-    def __init__(self, n_episodes):   
+    def __init__(self, n_episodes, start_difficulty):   
         self.BATCH_SIZE = 128
         self.GAMMA = 0.999
         self.EPS_START = 0.95
         self.EPS_END = 0.001
-        self.EPS_DECAY = 50
+        self.EPS_DECAY = 60
         self.TARGET_UPDATE = 20
 
         self.n_episodes = n_episodes
-        self.difficulty = 0
+        self.difficulty = start_difficulty
 
         self.game = environment(289,511,52,320,34,24,112,difficulty = self.difficulty)
 
         self.action = 0
 
-        n_actions = 2
-        n_hidden = 64
-        n_input = len(self.game.cur_state)
+        self.n_actions = 2
+        self.n_hidden = 64
+        self.n_input = len(self.game.cur_state)
 
-        self.policy_net = DQN(n_input, n_actions,n_hidden).to(device)
-        self.target_net = DQN(n_input, n_actions,n_hidden).to(device)
+        self.policy_net = DQN(self.n_input, self.n_actions, self.n_hidden).to(device)
+        self.target_net = DQN(self.n_input, self.n_actions, self.n_hidden).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -131,7 +133,9 @@ class DQNagent:
             self.action = random.randint(0,1)
         else:
             #Argmax
-            self.action  = self.target_net(torch.tensor(self.game.cur_state)).argmax().item()  #Dont give optimize a boolean?
+            state = torch.tensor(self.game.cur_state)#.to(dtype=torch.double)
+            #print(state)
+            self.action  = self.target_net(state).argmax().item()  #Dont give optimize a boolean?
         #print(self.action)
             #with torch.no_grad():
             #    self.action = self.policy_net(torch.tensor(self.game.cur_state)).max(1)[1].view(1, 1)
@@ -215,6 +219,10 @@ class DQNagent:
                 print('Rampin that booty up!')
                 ramp_up = False
                 self.difficulty += 1
+                #Skip diff 1
+                if self.difficulty == 1:
+                    self.difficulty += 1
+                self.best_score = 0
                 self.game = environment(289,511,52,320,34,24,112,difficulty = self.difficulty)
             frames_cleared = 0
             reward = 1
@@ -233,14 +241,14 @@ class DQNagent:
                 
                 frames_cleared += 1
                 #reward = frames_cleared #+ self.game.score*100
-                if self.difficulty == 4:
-                    if self.best_score < self.game.score:
-                        self.best_score = self.game.score
+                
+                if self.best_score < self.game.score:
+                    self.best_score = self.game.score
                 if self.game.isGameOver:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = -100
                     #term = torch.tensor([0])
-                if self.game.score == 100:
+                if self.game.score == 50:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = 100
                     ramp_up = True
@@ -257,25 +265,29 @@ class DQNagent:
                 if ramp_up:
                     #self.game.restart()
                     #self.target_net.load_state_dict(self.policy_net.state_dict())
+                    del self.game
                     break
+                if self.difficulty == 4 and self.best_score > 9:
+                    torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
         
             # Update the target network, copying all weights and biases in DQN
             if cur_episode % self.TARGET_UPDATE == 0:
                 self.target_net.load_state_dict(self.policy_net.state_dict())
             
-        
-        print('Complete')
-        print(f'Best score of run: {self.best_score}')
+        if self.difficulty == 4 and self.best_score > 9:        
+            print(f'Achieved difficulty: {self.difficulty}')
+            print(f'Best score of run: {self.best_score}')
+            #torch.save(self.target_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
 
-        window_size = 10
-        numbers_series = pd.Series(self.reward_ls)
-        moving_averages = numbers_series.rolling(window_size).mean()
-        moving_averages_list = moving_averages.tolist()
-        final_list = moving_averages_list[window_size - 1:]
+            window_size = 10
+            numbers_series = pd.Series(self.reward_ls)
+            moving_averages = numbers_series.rolling(window_size).mean()
+            moving_averages_list = moving_averages.tolist()
+            final_list = moving_averages_list[window_size - 1:]
 
-        plt.plot(self.reward_ls,label = 'Score per ep')
-        plt.plot(range(window_size-1,len(self.reward_ls)),final_list,label = f'Score per {window_size} ep')
-        plt.legend()
-        plt.xlabel('Episode')
-        plt.ylabel('Frames cleared')
-        plt.show()
+            plt.plot(self.reward_ls,label = 'Score per ep')
+            plt.plot(range(window_size-1,len(self.reward_ls)),final_list,label = f'Score per {window_size} ep')
+            plt.legend()
+            plt.xlabel('Episode')
+            plt.ylabel('Frames cleared')
+            plt.show()

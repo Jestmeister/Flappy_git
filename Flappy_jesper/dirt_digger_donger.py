@@ -2,10 +2,20 @@ import random
 import torch
 from agent import DQNagent
 
+
+run_counter = 0
 go_main = True
 if go_main:
-    agent = DQNagent(n_episodes=500)
-    agent.train()
+    while True:
+        run_counter += 1
+        print('')
+        print('----------- NEW RUN -----------')
+        print('')
+        agent = DQNagent(n_episodes=600,start_difficulty=0)
+        agent.train()
+        if agent.difficulty == 4 and agent.best_score > 9:
+            print(f'Number of runs until epicness: {run_counter}')
+            break   
 
 '''
 #Wrong axis??
