@@ -2,7 +2,8 @@ import random  # For generating random numbers
 import sys
 from turtle import isvisible  # We will use sys.exit to exit the program
 import pygame
-from pygame.locals import *  # Basic pygame imports
+from pygame.locals import *
+from scipy.fftpack import diff  # Basic pygame imports
 from environment import environment
 from agent import DQN, DQNagent
 import copy as cp
@@ -81,6 +82,8 @@ def main_gameplay(game):
     p_flap = False
 
     while True:
+        print(up_pips)
+        print(low_pips)
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
@@ -176,11 +179,11 @@ def get_Random_Pipes():
     """
     pip_h = game_image['pipe'][0].get_height()
     off_s = scr_height / 3
-    off_s = scr_height / 2
+    off_s = int(scr_height / 2.5)
     yes2 = off_s + random.randrange(0, int(scr_height - game_image['base'].get_height() - 1.2 * off_s))
-    yes2 = off_s
+    #yes2 = off_s
     pipeX = scr_width + 10
-    pipeX = 2*scr_width
+    #pipeX = 2*scr_width
     y1 = pip_h - yes2 + off_s
     pipe = [
         {'x': pipeX, 'y': -y1},  # upper Pipe
@@ -197,7 +200,7 @@ def NN(NNInput):
 if __name__ == "__main__":
 
     isHumanPlayer = True
-    isVisual = False
+    isVisual = True
 
     pygame.init()
     time_clock = pygame.time.Clock()
@@ -243,7 +246,7 @@ if __name__ == "__main__":
     #print(player_width)
     #print(player_height)
     #print(base_height)
-    game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,0)
+    game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,difficulty=3)
     
     if isHumanPlayer:
         while True:
@@ -254,31 +257,32 @@ if __name__ == "__main__":
     #TODO: Implement so trained agent can play 
     elif isVisual:
         old_score = 0
-        cur_state,inputs,isGameOver = game.update(False)
+        #cur_state,inputs,isGameOver = game.update(False)
+        game.update(False)
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                     pygame.quit()
                     sys.exit()
 
-            jump = NN(cur_state)
+            jump = NN(game.cur_state)
             if jump:
                 game_audio_sound['wing'].play()
-            if inputs[0] != old_score:
-                old_score = inputs[0]
+            if game.score != old_score:
+                old_score = game.score
                 print(f"Your score is {old_score}")
                 game_audio_sound['point'].play()
 
-            cur_state,inputs,isGameOver = game.update(jump)
+            game.update(jump)
             
             display_screen_window.blit(game_image['background'], (0, 0))
-            for pip_upper, pip_lower in zip(inputs[1], inputs[2]):
+            for pip_upper, pip_lower in zip(game.up_pips, game.low_pips):
                 display_screen_window.blit(game_image['pipe'][0], (pip_upper['x'], pip_upper['y']))
                 display_screen_window.blit(game_image['pipe'][1], (pip_lower['x'], pip_lower['y']))
 
-            display_screen_window.blit(game_image['base'], (inputs[3], play_ground))
-            display_screen_window.blit(game_image['player'], (inputs[4], inputs[5]))
-            d = [int(x) for x in list(str(inputs[0]))]
+            display_screen_window.blit(game_image['base'], (game.b_x, play_ground))
+            display_screen_window.blit(game_image['player'], (game.p_x, game.p_y))
+            d = [int(x) for x in list(str(game.score))]
             w = 0
             for digit in d:
                 w += game_image['numbers'][digit].get_width()

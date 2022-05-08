@@ -79,7 +79,7 @@ class DQNagent:
         self.EPS_START = 0.95
         self.EPS_END = 0.001
         self.EPS_DECAY = 50
-        self.TARGET_UPDATE = 30
+        self.TARGET_UPDATE = 20
 
         self.n_episodes = n_episodes
         self.difficulty = 0
@@ -101,7 +101,7 @@ class DQNagent:
         self.memory = ReplayMemory(10000)
 
         self.steps_done = 0
-        
+        self.best_score = 0
         
         self.reward_ls = np.zeros(self.n_episodes)
 
@@ -192,11 +192,11 @@ class DQNagent:
         else:
             return True
 
-    #Outputs -1 and 1???
+    #Outputs -1 and 1??? (nope)
     #Set seeds for same pipes all the time??? (Ez mode activated)
     #Select action calls in correct net? (traget)
-    #Change network structure?
-    #Correct inputs??? <------------  MORE INPUTS NEEDED
+    #Change network structure? (probs not)
+    #Correct inputs??? <------------  MORE INPUTS NEEDED !!!
     #Use copy so nothing gets over written?? Fuck python
 
     #Possible improvements:
@@ -233,12 +233,14 @@ class DQNagent:
                 
                 frames_cleared += 1
                 #reward = frames_cleared #+ self.game.score*100
-                
+                if self.difficulty == 4:
+                    if self.best_score < self.game.score:
+                        self.best_score = self.game.score
                 if self.game.isGameOver:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = -100
                     #term = torch.tensor([0])
-                if self.game.score == 200:
+                if self.game.score == 100:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = 100
                     ramp_up = True
@@ -254,6 +256,7 @@ class DQNagent:
 
                 if ramp_up:
                     #self.game.restart()
+                    #self.target_net.load_state_dict(self.policy_net.state_dict())
                     break
         
             # Update the target network, copying all weights and biases in DQN
@@ -262,15 +265,17 @@ class DQNagent:
             
         
         print('Complete')
+        print(f'Best score of run: {self.best_score}')
 
-        window_size = 100
+        window_size = 10
         numbers_series = pd.Series(self.reward_ls)
         moving_averages = numbers_series.rolling(window_size).mean()
         moving_averages_list = moving_averages.tolist()
         final_list = moving_averages_list[window_size - 1:]
 
-        plt.plot(self.reward_ls)
-        plt.plot(range(window_size-1,len(self.reward_ls)),final_list)
+        plt.plot(self.reward_ls,label = 'Score per ep')
+        plt.plot(range(window_size-1,len(self.reward_ls)),final_list,label = f'Score per {window_size} ep')
+        plt.legend()
         plt.xlabel('Episode')
-        plt.ylabel('Score')
+        plt.ylabel('Frames cleared')
         plt.show()

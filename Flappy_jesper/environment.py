@@ -42,6 +42,9 @@ class environment:
             {'x': self.scr_width + 200 + (self.scr_width / 2), 'y': self.n_pip2[1]['y']},
         ]
 
+        #print(self.up_pips)
+        #print(self.low_pips)
+
         self.pip_Vx = -4
 
         self.p_vx = -9
@@ -53,7 +56,7 @@ class environment:
         self.p_flap = False
 
         self.game_State()
-        self.cur_state = [self.x_to_pipe, self.p_y, self.y_of_pipe, self.p_vx]
+        #self.cur_state = [self.x_to_pipe, self.p_y, self.y_of_pipe, self.p_vx]
         
     def is_Colliding(self,p_x, p_y, up_pipes, low_pipes):
         if p_y > self.play_ground - 25 or p_y < 0:
@@ -87,6 +90,14 @@ class environment:
             yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
             pipeX = 2 * self.scr_width
         elif self.difficulty == 2:
+            off_s = self.scr_height / 2
+            yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
+            pipeX = self.scr_width + 10
+        elif self.difficulty == 3:
+            off_s = int(self.scr_height / 2.3)
+            yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
+            pipeX = self.scr_width + 10
+        elif self.difficulty == 4:
             off_s = self.scr_height / 3
             yes2 = off_s + random.randrange(0, int(self.scr_height - self.base_height - 1.2 * off_s))
             pipeX = self.scr_width + 10
@@ -154,15 +165,31 @@ class environment:
         #return self.game_State(), [self.score,self.up_pips,self.low_pips,self.b_x,self.p_x,self.p_y], isGameOver
         self.game_State()
 
+    
     def game_State(self):
         self.x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
         self.y_of_pipe = self.low_pips[0]['y']
-        for pipe in self.low_pips:
+        self.y_of_pipe2 = self.up_pips[0]['y']
+        for i,pipe in enumerate(self.low_pips):
             if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < self.x_to_pipe:
                 self.x_to_pipe = abs(self.p_x - pipe['x'])
                 self.y_of_pipe = pipe['y']
-        self.cur_state = [self.x_to_pipe, self.p_y, self.y_of_pipe, self.p_vx]
+                self.y_of_pipe2 = self.up_pips[i]['y']
+        self.cur_state = [self.x_to_pipe, self.p_y, self.y_of_pipe, self.y_of_pipe2, self.p_vx]
+        #print(self.cur_state)
+        #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
+    
+    def game_State2(self):
+        self.x_to_pipe = self.p_x - self.low_pips[-2]['x']
+        self.y_of_pipe = self.low_pips[-2]['y']
+        self.y_of_pipe2 = self.up_pips[-2]['y']
 
+        self.x_to_nxt_pipe = self.p_x - self.low_pips[-1]['x']
+        self.y_of_nxt_pipe = self.low_pips[-1]['y']
+        self.y_of_nxt_pipe2 = self.up_pips[-1]['y']
+        
+        self.cur_state = [self.x_to_pipe, self.p_y, self.y_of_pipe, self.y_of_pipe2, self.p_vx, self.x_to_nxt_pipe, self.y_of_nxt_pipe,self.y_of_nxt_pipe2]
+        #print(self.cur_state)
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
         
 

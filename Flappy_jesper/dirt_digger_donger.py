@@ -4,7 +4,7 @@ from agent import DQNagent
 
 go_main = True
 if go_main:
-    agent = DQNagent(n_episodes=400)
+    agent = DQNagent(n_episodes=500)
     agent.train()
 
 '''
