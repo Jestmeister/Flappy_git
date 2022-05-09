@@ -74,6 +74,8 @@ class AgentPG:
 
         self.steps += 1
 
+        self.t += 1
+
         if done:
             self.episode_durations.append(self.t + 1)
             self.plot_durations()
