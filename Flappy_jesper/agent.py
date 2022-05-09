@@ -200,8 +200,7 @@ class DQNagent:
     #Set seeds for same pipes all the time??? (Ez mode activated)
     #Select action calls in correct net? (traget)
     #Change network structure? (probs not)
-    #Correct inputs??? <------------  MORE INPUTS NEEDED !!!
-    #Use copy so nothing gets over written?? Fuck python
+    #Correct inputs??? (Not to many?)
 
     #Possible improvements:
     #Add punishment for next state being a death? (Did something with expected reward in optimize with term)
@@ -210,6 +209,7 @@ class DQNagent:
     #Correct reward function?
     #Correct loss function?
     #Correct optimizer?
+    #Save best policy run or just check loss function???
     def train(self):
         ramp_up = False
         for cur_episode in range(self.n_episodes):
@@ -259,6 +259,9 @@ class DQNagent:
                 # Store the transition in memory
                 self.memory.push(old_state, action, state , reward)
 
+                if self.difficulty == 4 and self.best_score > 9:
+                    torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
+
                 # Perform one step of the optimization (on the policy network)
                 self.optimize_model()
 
@@ -267,8 +270,7 @@ class DQNagent:
                     #self.target_net.load_state_dict(self.policy_net.state_dict())
                     del self.game
                     break
-                if self.difficulty == 4 and self.best_score > 9:
-                    torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
+                
         
             # Update the target network, copying all weights and biases in DQN
             if cur_episode % self.TARGET_UPDATE == 0:
