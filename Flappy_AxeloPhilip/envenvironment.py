@@ -94,6 +94,9 @@ class Game:
 
         self.gameover = False
 
+        # x cordinate for NN
+        self.x = 0
+
         return self.game_State(True)
 
 
@@ -130,6 +133,7 @@ class Game:
         for pip_upper, pip_lower in zip(self.up_pips, self.low_pips):
             pip_upper['x'] += self.pip_Vx
             pip_lower['x'] += self.pip_Vx
+            self.x += self.pip_Vx
 
 
         if 0 < self.up_pips[0]['x'] < 5:
@@ -181,7 +185,7 @@ class Game:
                 y_of_pipe = pipe['y']
 
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
-        next_state = np.array([x_to_pipe, self.p_y, y_of_pipe, self.p_vx])
+        next_state = np.array([x_to_pipe, self.p_y, y_of_pipe, self.x])
         if only_state:
             return next_state
 
