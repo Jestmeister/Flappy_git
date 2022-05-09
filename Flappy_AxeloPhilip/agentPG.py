@@ -12,7 +12,7 @@ import numpy as np
 import random
 
 #import gym
-import envenvironment
+import environment
 
 
 
@@ -34,7 +34,7 @@ class PolicyNet(nn.Module):
 
 class AgentPG:
     def Start(self, learning_rate):
-        self.env = envenvironment.Game()
+        self.env = environment.Game()
         self.policy_net = PolicyNet()
         self.optimizer = torch.optim.RMSprop(self.policy_net.parameters(), lr=learning_rate)
 
