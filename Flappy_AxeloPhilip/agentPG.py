@@ -33,11 +33,11 @@ class PolicyNet(nn.Module):
 
 
 class AgentPG:
-    def Start(self, learning_rate):
+    def Start(self, learning_rate, start_difficulty):
         self.env = environment.Game()
         self.policy_net = PolicyNet()
         self.optimizer = torch.optim.RMSprop(self.policy_net.parameters(), lr=learning_rate)
-
+        self.difficulty = start_difficulty
         # Batch History
         self.state_pool = []
         self.action_pool = []
@@ -47,7 +47,7 @@ class AgentPG:
         self.episode_durations = []
     
     def StartEnv(self):
-        self.state = self.env.Start(True, False)
+        self.state = self.env.Start(True, False, self.difficulty)
         self.state = torch.from_numpy(self.state).float()
         self.state = Variable(self.state)
         self.t = 0

@@ -1,18 +1,17 @@
 
 import agentPG
 
-
-
 def main():
     # Parameters
     num_episode = 5000
-    batch_size = 100
+    batch_size = 500
     learning_rate = 0.01
     gamma = 0.99
+    start_difficulty = 0
 
     theAgent = agentPG.AgentPG()
 
-    theAgent.Start(learning_rate)
+    theAgent.Start(learning_rate, start_difficulty)
 
     for e in range(num_episode):
         theAgent.StartEnv()
