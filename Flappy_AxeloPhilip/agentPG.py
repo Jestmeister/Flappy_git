@@ -62,7 +62,7 @@ class AgentPG:
         
         # To mark boundarys between episodes
         if done:
-            reward = -100
+            reward = 0
 
         self.state_pool.append(self.state)
         self.action_pool.append(float(action))

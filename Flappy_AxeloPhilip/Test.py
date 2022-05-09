@@ -41,18 +41,23 @@ class Test(unittest.TestCase):
         theAgent.Start(1, 4)
         theAgent.StartEnv()
 
-        input = np.array([1., -1., 0.5, -1.5])
-        input = torch.from_numpy(input).float()
-        input = Variable(input)
-
-        action1 = theAgent.policy_net(input)
-
         theAgent.Update()
-        theAgent.reward_pool = [0]
+        theAgent.Update()
+        theAgent.Update()
+
+        action1 = theAgent.action_pool[0]
+        state1 = theAgent.state_pool[0]
+        action2 = theAgent.action_pool[2]
+        state2 = theAgent.state_pool[2]
+
+        theAgent.reward_pool = [100000]
+        theAgent.reward_pool.append(0)
+        theAgent.reward_pool.append(1)
+
         theAgent.UpdatePolicy(1)
 
-        action2 = theAgent.policy_net(input).item()
-        self.assertNotAlmostEqual(action1, action2, 2)
+        self.assertAlmostEqual(action1, theAgent.policy_net(state1).item(), 2)
+        self.assertNotAlmostEqual(action2, theAgent.policy_net(state2).item(), 2)
 
 
 if (__name__ == '__main__'):

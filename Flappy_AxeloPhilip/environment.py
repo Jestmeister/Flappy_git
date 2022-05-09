@@ -191,7 +191,7 @@ class Game:
         if only_state:
             return next_state
 
-        reward = 1 + 100*self.score
+        reward = 1
 
         done = self.gameover
 

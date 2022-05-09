@@ -21,7 +21,7 @@ class PolicyNet(nn.Module):
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = torch.sigmoid(self.fc3(x))
+        x = F.sigmoid(self.fc3(x))
         return x
 
 
@@ -47,12 +47,12 @@ def main():
         plt.pause(0.001)  # pause a bit so that plots are updated
 
     # Parameters
-    num_episode = 1
+    num_episode = 5000
     batch_size = 5
     learning_rate = 0.01
     gamma = 0.99
 
-    env = gym.make('CartPole-v1')
+    env = gym.make('CartPole-v0')
     policy_net = PolicyNet()
     optimizer = torch.optim.RMSprop(policy_net.parameters(), lr=learning_rate)
 
@@ -78,9 +78,6 @@ def main():
 
             action = action.data.numpy().astype(int)[0]
             next_state, reward, done, _ = env.step(action)
-            print(action)
-            print(type(action))
-            print(next_state, reward, done, _)
             env.render(mode='rgb_array')
 
             # To mark boundarys between episodes
@@ -126,7 +123,6 @@ def main():
             for i in range(steps):
                 state = state_pool[i]
                 action = Variable(torch.FloatTensor([action_pool[i]]))
-                print(action)
                 reward = reward_pool[i]
 
                 probs = policy_net(state)
