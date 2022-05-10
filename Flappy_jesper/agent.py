@@ -113,7 +113,13 @@ class DQNagent:
         sample = random.random()
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
             math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        
+        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
+            math.exp(-1. * (self.steps_done + self.game.score * 10) / self.EPS_DECAY)
+        
         self.steps_done += 1
+
+        #eps_threshold = max(0.0005, 0.7 * math.exp(-1. * self.game.score / self.EPS_DECAY))
 
         '''
         if sample > eps_threshold:
@@ -211,6 +217,9 @@ class DQNagent:
     #Correct optimizer?
     #Save best policy run or just check loss function???
     #cnn
+    #adaptive epsilon decay (low decay when good and large decay when large)
+    #Save correct net!!! Must be a converged net
+    #Hard to have empty space in begining and the pipe thight space?
     def train(self):
         ramp_up = False
         for cur_episode in range(self.n_episodes):
@@ -242,7 +251,9 @@ class DQNagent:
                 
                 frames_cleared += 1
                 #reward = frames_cleared #+ self.game.score*100
-                
+                if self.difficulty == 4 and self.best_score < self.game.score:
+                    #torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
+                    torch.save(self.policy_net.state_dict(), 'C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net.pt')
                 if self.best_score < self.game.score:
                     self.best_score = self.game.score
                 if self.game.isGameOver:
@@ -260,8 +271,7 @@ class DQNagent:
                 # Store the transition in memory
                 self.memory.push(old_state, action, state , reward)
 
-                if self.difficulty == 4 and self.best_score > 9:
-                    torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
+                
 
                 # Perform one step of the optimization (on the policy network)
                 self.optimize_model()
@@ -277,7 +287,7 @@ class DQNagent:
             if cur_episode % self.TARGET_UPDATE == 0:
                 self.target_net.load_state_dict(self.policy_net.state_dict())
             
-        if self.difficulty == 4 and self.best_score > 9:        
+        if self.difficulty == 4 and self.best_score > 5:        
             print(f'Achieved difficulty: {self.difficulty}')
             print(f'Best score of run: {self.best_score}')
             #torch.save(self.target_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')

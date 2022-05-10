@@ -13,7 +13,7 @@ if go_main:
         print('')
         agent = DQNagent(n_episodes=600,start_difficulty=0)
         agent.train()
-        if agent.difficulty == 4 and agent.best_score > 9:
+        if agent.difficulty == 4 and agent.best_score > 5:
             print(f'Number of runs until epicness: {run_counter}')
             break   
 
