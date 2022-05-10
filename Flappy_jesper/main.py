@@ -83,8 +83,8 @@ def main_gameplay(game):
     p_flap = False
 
     while True:
-        print(up_pips)
-        print(low_pips)
+        #print(up_pips)
+        #print(low_pips)
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
@@ -161,13 +161,13 @@ def is_Colliding(p_x, p_y, up_pipes, low_pipes):
 
     for pipe in up_pipes:
         pip_h = game_image['pipe'][0].get_height()
-        if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < game_image['pipe'][0].get_width()):
+        if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < game_image['pipe'][0].get_width() - 20):
             game_audio_sound['hit'].play()
             return True
 
     for pipe in low_pipes:
         if (p_y + game_image['player'].get_height() > pipe['y']) and abs(p_x - pipe['x']) < \
-                game_image['pipe'][0].get_width():
+                game_image['pipe'][0].get_width() -20:  ########## CHANGE ###############
             game_audio_sound['hit'].play()
             return True
 
@@ -206,7 +206,7 @@ def read_action(action):
 
 if __name__ == "__main__":
 
-    isHumanPlayer = False
+    isHumanPlayer = True
     isVisual = True
 
     pygame.init()

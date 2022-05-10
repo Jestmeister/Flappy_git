@@ -65,12 +65,12 @@ class environment:
 
         for pipe in up_pipes:
             pip_h = self.pipe_height
-            if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < self.pipe_width):
+            if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < self.pipe_width-20):
                 return True
 
         for pipe in low_pipes:
             if (p_y + self.player_height > pipe['y']) and abs(p_x - pipe['x']) < \
-                    self.pipe_width:
+                    self.pipe_width-20:
                 return True
 
         return False
