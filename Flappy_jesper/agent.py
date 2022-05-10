@@ -210,6 +210,7 @@ class DQNagent:
     #Correct loss function?
     #Correct optimizer?
     #Save best policy run or just check loss function???
+    #cnn
     def train(self):
         ramp_up = False
         for cur_episode in range(self.n_episodes):

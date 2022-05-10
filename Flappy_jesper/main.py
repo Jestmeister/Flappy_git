@@ -267,8 +267,8 @@ if __name__ == "__main__":
         #cur_state,inputs,isGameOver = game.update(False)
         agent = DQNagent(0,0)
         model = DQN(agent.n_input, agent.n_actions, agent.n_hidden)
-        #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
-        model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
+        model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
+        #model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
         model.eval()
         game.update(False)
         while True:
@@ -277,8 +277,13 @@ if __name__ == "__main__":
                     pygame.quit()
                     sys.exit()
 
-            #jump = NN(game.cur_state)
+            
+            
+
+
             state = torch.tensor(game.cur_state)
+            if game.isGameOver:
+                pass
             action  = model(state).argmax().item()
             
             if read_action(action):
