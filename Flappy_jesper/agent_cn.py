@@ -4,6 +4,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import namedtuple, deque
+from PIL import Image
+import pygame
 
 import torch
 import torch.nn as nn
@@ -15,10 +17,12 @@ from environment import environment
 import pandas as pd
 import copy as cp
 
+
+
 #https://pythonprogramming.net/training-deep-q-learning-dqn-reinforcement-learning-python-tutorial/?completed=/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 #https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
 
-#TODO: Normalize inputs
+#TODO: Save weights and read in weights
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
@@ -43,34 +47,37 @@ class ReplayMemory(object):
 
 class DQN(nn.Module):
 
-    def __init__(self, n_inputs, n_actions, n_hidden):
+    def __init__(self,  h, w, outputs):
         super(DQN, self).__init__()
-        self.fc1    = nn.Linear(n_inputs, n_hidden)  #change to len(self.output)
-        self.fc2    = nn.Linear(n_hidden, n_hidden)
-        self.fc3    = nn.Linear(n_hidden, n_actions) #len(actions)
-        #self.myNetwork = nn.Sequential(
-        #nn.Linear(n_inputs, 64),  
-        #nn.Linear(64, 64),
-        #nn.Linear(64, n_actions) 
-        #)
+        super(DQN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+        self.bn3 = nn.BatchNorm2d(32)
 
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+        # Number of Linear input connections depends on output of conv2d layers
+        # and therefore the input image size, so compute it.
+        def conv2d_size_out(size, kernel_size = 5, stride = 2):
+            return (size - (kernel_size - 1) - 1) // stride  + 1
+        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
+        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
+        linear_input_size = convw * convh * 32
+        self.head = nn.Linear(linear_input_size, outputs)
+   
     def forward(self, x):
-        #x = x.to(device)    #
         x = x.float()
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
         return x
         
-        #qValues = self.myNetwork(x)
-        #return torch.sigmoid(qValues)
-        
+ 
 
 
 
-class DQNagent:
+class DQNagent_cn:
     def __init__(self, n_episodes, start_difficulty):   
         self.BATCH_SIZE = 128
         self.GAMMA = 0.999
@@ -82,7 +89,11 @@ class DQNagent:
         self.n_episodes = n_episodes
         self.difficulty = start_difficulty
 
-        self.game = environment(289,511,52,320,34,24,112,difficulty = self.difficulty)
+        self.scr_width = 289
+        self.scr_height = 511
+        self.play_ground = self.scr_height * 0.8
+        self.game = environment(self.scr_width,self.scr_height,52,320,34,24,112,difficulty = self.difficulty)
+        
 
         self.action = 0
 
@@ -102,8 +113,59 @@ class DQNagent:
         self.best_score = 0
         
         self.reward_ls = np.zeros(self.n_episodes)
+        self.resize = T.Compose([T.ToPILImage(),
+            T.Resize(40, interpolation=Image.CUBIC),
+            T.ToTensor()])
+
+        pygame.init()
+        self.display_screen_window = pygame.display.set_mode((self.scr_width, self.scr_height))
+        self.game_image = {}
+        player = 'images/bird.png'
+        bcg_image = 'images/background.png'
+        pipe_image = 'images/pipe.png'
+        self.game_image['numbers'] = (
+        pygame.image.load('images/0.png').convert_alpha(),
+        pygame.image.load('images/1.png').convert_alpha(),
+        pygame.image.load('images/2.png').convert_alpha(),
+        pygame.image.load('images/3.png').convert_alpha(),
+        pygame.image.load('images/4.png').convert_alpha(),
+        pygame.image.load('images/5.png').convert_alpha(),
+        pygame.image.load('images/6.png').convert_alpha(),
+        pygame.image.load('images/7.png').convert_alpha(),
+        pygame.image.load('images/8.png').convert_alpha(),
+        pygame.image.load('images/9.png').convert_alpha(),
+    )
+
+        self.game_image['message'] = pygame.image.load('images/message.png').convert_alpha()
+        self.game_image['base'] = pygame.image.load('images/base.png').convert_alpha()
+        self.game_image['pipe'] = (pygame.transform.rotate(pygame.image.load(pipe_image).convert_alpha(), 180),
+                            pygame.image.load(pipe_image).convert_alpha()
+                            )
+
+        self.game_image['background'] = pygame.image.load(bcg_image).convert()
+        self.game_image['player'] = pygame.image.load(player).convert_alpha()
+    
+
+    def get_screen(self):
+        # Returned screen requested by gym is 400x600x3, but is sometimes larger
+        # such as 800x1200x3. Transpose it into torch order (CHW).
+        screen = self.render().transpose((2, 0, 1))
+        
+        
+        # Convert to float, rescale, convert to torch tensor
+        # (this doesn't require a copy)
+        screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
+        screen = torch.from_numpy(screen)
+        # Resize, and add a batch dimension (BCHW)
+        return self.resize(screen).unsqueeze(0)
 
 
+    def test_scrn(self):
+        plt.figure()
+        plt.imshow(self.get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(),
+                interpolation='none')
+        plt.title('Example extracted screen')
+        plt.show()
 
     def select_action(self):
         #global steps_done
@@ -131,6 +193,8 @@ class DQNagent:
         #monkey = [False, True]
         if sample < eps_threshold:
             #Random
+            #monkey = [False, True]
+            #return random.randint(0,1)
             self.action = random.randint(0,1)
         else:
             #Argmax
@@ -216,8 +280,8 @@ class DQNagent:
     #Save correct net!!! Must be a converged net
     #Hard to have empty space in begining and the pipe thight space?
 
-    #Normalize inputs!
 
+    #Implement read state
     def train(self):
         ramp_up = False
         for cur_episode in range(self.n_episodes):
@@ -236,15 +300,21 @@ class DQNagent:
             reward = 1
             #term = torch.tensor([1])
             self.game.update(False)
+            last_screen = self.get_screen()
+            current_screen = self.get_screen()
+            state = current_screen - last_screen
             while not self.game.isGameOver:
                 # Select and perform an action
-                old_state = cp.deepcopy(torch.tensor([self.game.cur_state]))
+                
+                old_state = cp.deepcopy(torch.tensor([state]))
                 #print(old_state)
                 #old_state = torch.tensor([old_state])
                 self.select_action()
-                
                 self.game.update(self.read_action())
-                state = cp.deepcopy(torch.tensor([self.game.cur_state]))
+                last_screen = cp.deepcopy(current_screen)
+                current_screen = self.get_screen()
+                state = current_screen - last_screen
+                state = cp.deepcopy(torch.tensor([state]))
                 #state = torch.tensor([state])
                 
                 frames_cleared += 1
@@ -302,3 +372,26 @@ class DQNagent:
             plt.xlabel('Episode')
             plt.ylabel('Frames cleared')
             plt.show()
+
+    def render(self):
+        
+        self.display_screen_window.blit(self.game_image['background'], (0, 0))
+        for pip_upper, pip_lower in zip(self.game.up_pips, self.game.low_pips):
+            self.display_screen_window.blit(self.game_image['pipe'][0], (pip_upper['x'], pip_upper['y']))
+            self.display_screen_window.blit(self.game_image['pipe'][1], (pip_lower['x'], pip_lower['y']))
+
+        self.display_screen_window.blit(self.game_image['base'], (self.game.b_x, self.play_ground))
+        self.display_screen_window.blit(self.game_image['player'], (self.game.p_x, self.game.p_y))
+        d = [int(x) for x in list(str(self.game.score))]
+        w = 0
+        for digit in d:
+            w += self.game_image['numbers'][digit].get_width()
+        Xoffset = (self.scr_width - w) / 2
+
+        for digit in d:
+            self.display_screen_window.blit(self.game_image['numbers'][digit], (Xoffset, self.scr_height * 0.12))
+            Xoffset += self.game_image['numbers'][digit].get_width()
+        imgdata = pygame.surfarray.array3d(self.display_screen_window) 
+        return imgdata
+        #pygame.display.update()
+        #time_clock.tick(FPS)
