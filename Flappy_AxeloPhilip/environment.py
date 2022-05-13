@@ -5,7 +5,7 @@ from turtle import done  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
 
-import numpy as np
+import torch
 
 
 
@@ -187,11 +187,11 @@ class Game:
                 y_of_pipe = pipe['y']
 
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
-        next_state = np.array([x_to_pipe, self.p_y, y_of_pipe, self.x])
+        next_state = torch.tensor([x_to_pipe, self.p_y, y_of_pipe, self.x])
         if only_state:
             return next_state
 
-        reward = 1
+        reward = self.score + 1
 
         done = self.gameover
 

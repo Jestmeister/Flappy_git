@@ -23,12 +23,12 @@ class ValueNet(nn.Module):
         return x
 
 
-        
+
 class Value:
     def __init__(self, learning_rate):
         self.valueNet = ValueNet()
         self.criterion = nn.MSELoss()
-        self.optimizer = torch.optim.RMSprop(self.net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.RMSprop(self.valueNet.parameters(), lr=learning_rate)
 
     def GetValue(self, state):
         return self.valueNet(state)

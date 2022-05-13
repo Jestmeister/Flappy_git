@@ -11,7 +11,7 @@ def main():
 
     theAgent = agentPG.AgentPG()
 
-    theAgent.Start(learning_rate, gamma, start_difficulty)
+    theAgent.StartAgent(learning_rate, gamma, start_difficulty)
 
     for e in range(num_episode):
         theAgent.StartEnv()
@@ -22,7 +22,8 @@ def main():
 
         # Update policy
         if e > 0 and e % batch_size == 0:
-            theAgent.UpdatePolicy(gamma)
+            theAgent.UpdatePolicy()
+
 
 
 if __name__ == '__main__':

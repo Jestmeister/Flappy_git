@@ -42,7 +42,7 @@ class AgentPG:
         self.env = environment.Game()
         self.value = value.Value(learning_rate)
         self.policyNet = PolicyNet()
-        self.optimizer = torch.optim.RMSprop(self.net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.RMSprop(self.policyNet.parameters(), lr=learning_rate)
 
         self.gamma = gamma #use in: DiscountedReward()
         self.start_difficulty = start_difficulty
@@ -91,7 +91,7 @@ class AgentPG:
     def UpdatePolicy(self):
         self.DiscountedReward()
         self.value.UpdateValueNet(self.state, self.discountedReward)
-        
+
         loss = self.Loss()
 
         loss.backward()
