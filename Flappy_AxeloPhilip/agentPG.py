@@ -59,6 +59,7 @@ class AgentPG:
     def StartEnv(self):
         currentState = self.env.Start(True, False, self.start_difficulty)
         self.state.append(currentState)
+        self.reward.append(1)
 
     
 
