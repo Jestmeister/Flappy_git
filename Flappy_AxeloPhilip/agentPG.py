@@ -90,7 +90,7 @@ class AgentPG:
 
     def UpdatePolicy(self):
         self.DiscountedReward()
-        self.value.UpdateValueNet(self.state, self.discountedReward)
+        self.value.UpdateValueNet(self.discountedReward, self.state)
 
         loss = self.Loss()
 
