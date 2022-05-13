@@ -11,7 +11,7 @@ def main():
 
     theAgent = agentPG.AgentPG()
 
-    theAgent.Start(learning_rate, start_difficulty)
+    theAgent.Start(learning_rate, gamma, start_difficulty)
 
     for e in range(num_episode):
         theAgent.StartEnv()
