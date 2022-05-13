@@ -116,7 +116,7 @@ class AgentPG:
     def UpdateValueNet(self):
         self.DiscountedReward()
 
-        pass #this shuld update the ValueNet
+        pass #this shuld update the ValueNet with the DiscountedReward as target and the state as input
 
     #calculates the discounted reward from reward and appends it to discountedReward
     def DiscountedReward(self):
