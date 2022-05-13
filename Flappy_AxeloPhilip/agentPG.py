@@ -111,9 +111,11 @@ class AgentPG:
     #calculates the discounted reward from reward and appends it to discountedReward
     def DiscountedReward(self):
         for i in range(len(self.reward)):
+            currentDiscountedReward = 0
             for j in range(len(self.reward) - i):
-                currentDiscountedReward = (self.gamma**j) * self.reward[j + i]
-                self.discountedReward.append(torch.tensor(currentDiscountedReward))
+                currentDiscountedReward += (self.gamma**j) * self.reward[j + i]
+            
+            self.discountedReward.append(torch.tensor(currentDiscountedReward))
 
     def Loss(self):
         #all these shuld be the same:

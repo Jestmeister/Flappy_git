@@ -37,7 +37,11 @@ class Value:
         y = []
         for i in range(len(state)):
             y.append(self.valueNet(state[i]))
-
+        
+        y = torch.Tensor(y)
+        rewardTarget = torch.Tensor(rewardTarget)
+        print(y.shape)
+        print(rewardTarget.shape)
         loss = self.criterion(rewardTarget, y)
 
         loss.backward()
