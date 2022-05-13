@@ -80,9 +80,11 @@ class AgentPG:
     def Update(self):
         currentAction = self.SelectAction(self.state[len(self.state) - 1])
 
-        currentState, currentReward = self.env.Update(currentAction)
+        currentState, currentReward, gameover = self.env.Update(currentAction)
         self.state.append(currentState)
         self.reward.append(currentReward)
+
+        return not(gameover) #running
 
     #takes the current state as a torch tensor and returns true or false aka jump or not
     def SelectAction(self, currentState):
