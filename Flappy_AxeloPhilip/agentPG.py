@@ -59,32 +59,47 @@ class AgentPG:
         self.optimizer = torch.optim.RMSprop(self.net.parameters(), lr=learning_rate)
 
         self.gamma = gamma #use in: DiscountedReward()
+        self.start_difficulty = start_difficulty
 
         self.state = []
-        self.action = []
+
         self.reward = []
         self.discountedReward = []
+
+        self.action = []
 
         pass #shuld set up all aribles needed for the runs ex. learning_rate and gamma
 
     def StartEnv(self):
-        pass #shuld start/restart env
+        currentState = self.env.Start(True, False, self.start_difficulty)
+        self.state.append(currentState)
+
     
 
-
+    #plays one frame of the game and saves the state, reward and action for UpdatePolicy()
     def Update(self):
-        pass #shuld use NN to play game and save actions, game states rewrds for each update
+        currentAction = self.SelectAction(self.state[len(self.state) - 1])
+
+        currentState, currentReward = self.env.Update(currentAction)
+        self.state.append(currentState)
+        self.reward.append(currentReward)
+
+        self.DiscountedReward()
 
     #takes the current state as a torch tensor and returns true or false aka jump or not
     def SelectAction(self, currentState):
         actionProbabilityDis = self.policyNet(currentState)
 
         selection = random.random()
-        if selection > actionProbabilityDis[0].item():
+        if selection < actionProbabilityDis[0].item():
+            self.action.append(actionProbabilityDis[0])
+
             return True
         else:
+            self.action.append(actionProbabilityDis[1])
+
             return False
-            
+
     def DiscountedReward(self):
         pass #this shuld calculate the discounted reward from reward and append it to discountedReward
     
@@ -92,6 +107,12 @@ class AgentPG:
 
     def UpdatePolicy(self):
         pass #shuld run normal supervised lerning using the rewards, states and actions
+
+        #resats the (training) data
+        self.state = []
+        self.reward = []
+        self.discountedReward = []
+        self.action = []
 
     def UpdateValueNet(self):
         pass #this shuld update the ValueNet
