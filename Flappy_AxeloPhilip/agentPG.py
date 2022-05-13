@@ -90,9 +90,15 @@ class AgentPG:
 
     def UpdatePolicy(self):
         self.DiscountedReward()
-        self.UpdateValueNet()
+        self.value.UpdateValueNet(self.state, self.discountedReward)
+        
+        loss = self.Loss()
 
-        pass #shuld run normal supervised lerning using the rewards, states and actions
+        loss.backward()
+
+        self.optimizer.step()
+
+        self.zero_grad()
 
         #resets the (training) data
         self.state = []
@@ -119,7 +125,7 @@ class AgentPG:
         #log(policy)A
         for i in range(len(self.state)):
             #A_t = G_t - V(t)
-            A = self.discountedReward[i] - self.valueNet(self.state[i])
+            A = self.discountedReward[i] - self.value.GetValue(self.state[i])
 
             loss += torch.log(self.action[i]) * A
         
