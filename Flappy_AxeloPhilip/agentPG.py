@@ -101,6 +101,8 @@ class AgentPG:
 
 
     def UpdatePolicy(self):
+        self.UpdateValueNet()
+
         pass #shuld run normal supervised lerning using the rewards, states and actions
 
         #resets the (training) data
@@ -108,6 +110,8 @@ class AgentPG:
         self.reward = []
         self.discountedReward = []
         self.action = []
+
+        #+ print loss function before and after update so one ses that its "improving"
 
     def UpdateValueNet(self):
         self.DiscountedReward()
