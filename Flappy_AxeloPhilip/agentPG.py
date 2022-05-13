@@ -51,9 +51,9 @@ class ValueNet(nn.Module):
 
 
 
-
 class AgentPG:
     def StartAgent(self, learning_rate, gamma, start_difficulty):
+        self.env = environment.Game()
         self.policyNet = PolicyNet()
         self.valueNet = ValueNet()
         self.optimizer = torch.optim.RMSprop(self.net.parameters(), lr=learning_rate)
@@ -128,4 +128,19 @@ class AgentPG:
                 self.discountedReward.append(currentDiscountedReward)
 
     def Loss(self):
-        return 0 #shuld be the avrege of: log(policy)A over the batch, A = discountedReward - ValueNet(state)
+        #all these shuld be the same:
+        print(len(self.state))
+        print(len(self.reward))
+        print(len(self.discountedReward))
+        print(len(self.action))
+
+        #log(policy)A
+        for i in range(len(self.state)):
+            #A_t = G_t - V(t)
+            A = self.discountedReward[i] - self.valueNet(self.state[i])
+
+            loss += torch.log(self.action[i]) * A
+        
+        loss /= len(self.state)
+
+        return loss
