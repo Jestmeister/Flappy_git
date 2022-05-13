@@ -1,5 +1,5 @@
 
-from enum import Flag
+import imp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,6 +13,8 @@ import random
 
 #import gym
 import environment
+
+import value
 
 
 
@@ -33,29 +35,13 @@ class PolicyNet(nn.Module):
 
         return x
 
-#this shuld take in a state vector and estimate the disconnted reward based on the state
-class ValueNet(nn.Module):
-    def __init__(self):
-        super(ValueNet, self).__init__()
-
-        self.fc1 = nn.Linear(4, 24)
-        self.fc2 = nn.Linear(24, 36)
-        self.fc3 = nn.Linear(36, 1)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        
-        return x
-
 
 
 class AgentPG:
     def StartAgent(self, learning_rate, gamma, start_difficulty):
         self.env = environment.Game()
+        self.value = value.Value(learning_rate)
         self.policyNet = PolicyNet()
-        self.valueNet = ValueNet()
         self.optimizer = torch.optim.RMSprop(self.net.parameters(), lr=learning_rate)
 
         self.gamma = gamma #use in: DiscountedReward()
@@ -103,6 +89,7 @@ class AgentPG:
 
 
     def UpdatePolicy(self):
+        self.DiscountedReward()
         self.UpdateValueNet()
 
         pass #shuld run normal supervised lerning using the rewards, states and actions
@@ -114,11 +101,6 @@ class AgentPG:
         self.action = []
 
         #+ print loss function before and after update so one ses that its "improving"
-
-    def UpdateValueNet(self):
-        self.DiscountedReward()
-
-        pass #this shuld update the ValueNet with the DiscountedReward as target and the state as input
 
     #calculates the discounted reward from reward and appends it to discountedReward
     def DiscountedReward(self):
