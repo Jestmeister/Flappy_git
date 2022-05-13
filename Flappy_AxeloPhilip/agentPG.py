@@ -103,7 +103,7 @@ class AgentPG:
     def UpdatePolicy(self):
         pass #shuld run normal supervised lerning using the rewards, states and actions
 
-        #resats the (training) data
+        #resets the (training) data
         self.state = []
         self.reward = []
         self.discountedReward = []
