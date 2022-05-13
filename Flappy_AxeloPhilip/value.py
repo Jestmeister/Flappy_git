@@ -34,7 +34,11 @@ class Value:
         return self.valueNet(state)
 
     def UpdateValueNet(self, rewardTarget, state):
-        loss = self.criterion(rewardTarget, state)
+        y = []
+        for i in range(len(state)):
+            y.append(self.valueNet(state[i]))
+
+        loss = self.criterion(rewardTarget, y)
 
         loss.backward()
 

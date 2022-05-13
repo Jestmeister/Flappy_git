@@ -31,9 +31,11 @@ class PolicyNet(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-        x = F.normalize(x)
-
-        return x
+        
+        sum = torch.sum(x)
+        y = (1 / sum)*x
+        
+        return y
 
 
 
@@ -53,8 +55,6 @@ class AgentPG:
         self.discountedReward = []
 
         self.action = []
-
-        pass #shuld set up all aribles needed for the runs ex. learning_rate and gamma
 
     def StartEnv(self):
         currentState = self.env.Start(True, False, self.start_difficulty)
@@ -130,5 +130,7 @@ class AgentPG:
             loss += torch.log(self.action[i]) * A
         
         loss /= len(self.state)
+
+        print('Total loss for this batch: {}'.format(loss.item()))
 
         return loss

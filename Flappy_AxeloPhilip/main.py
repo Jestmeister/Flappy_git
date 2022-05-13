@@ -22,6 +22,7 @@ def main():
 
         # Update policy
         if e > 0 and e % batch_size == 0:
+            print(e)
             theAgent.UpdatePolicy()
 
 
