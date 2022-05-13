@@ -113,7 +113,7 @@ class AgentPG:
         for i in range(len(self.reward)):
             for j in range(len(self.reward) - i):
                 currentDiscountedReward = (self.gamma**j) * self.reward[j + i]
-                self.discountedReward.append(currentDiscountedReward)
+                self.discountedReward.append(torch.tensor(currentDiscountedReward))
 
     def Loss(self):
         #all these shuld be the same:
