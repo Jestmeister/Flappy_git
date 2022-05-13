@@ -1,8 +1,8 @@
 
-from xml.sax.handler import DTDHandler
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 
 
@@ -39,13 +39,15 @@ class Value:
             y.append(self.valueNet(state[i]))
         
         y = torch.Tensor(y)
+        y = Variable(y.data, requires_grad=True)
         rewardTarget = torch.Tensor(rewardTarget)
-        print(y.shape)
-        print(rewardTarget.shape)
+        rewardTarget = Variable(rewardTarget.data, requires_grad=True)
+        print(y.requires_grad)
+        print(rewardTarget.requires_grad)
         loss = self.criterion(rewardTarget, y)
 
         loss.backward()
 
         self.optimizer.step()
 
-        self.zero_grad()
+        self.valueNet.zero_grad()

@@ -60,6 +60,7 @@ class AgentPG:
         currentState = self.env.Start(True, False, self.start_difficulty)
         self.state.append(currentState)
         self.reward.append(1)
+        self.action.append(0)
 
     
 
@@ -126,11 +127,12 @@ class AgentPG:
         print(len(self.action))
 
         #log(policy)A
+        loss = 0
         for i in range(len(self.state)):
             #A_t = G_t - V(t)
             A = self.discountedReward[i] - self.value.GetValue(self.state[i])
 
-            loss += torch.log(self.action[i]) * A
+            loss += torch.log(torch.Tensor(self.action[i])) * A
         
         loss /= len(self.state)
 
