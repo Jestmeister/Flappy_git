@@ -1,5 +1,6 @@
 
 from enum import Flag
+from math import gamma
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -84,8 +85,6 @@ class AgentPG:
         self.state.append(currentState)
         self.reward.append(currentReward)
 
-        self.DiscountedReward()
-
     #takes the current state as a torch tensor and returns true or false aka jump or not
     def SelectAction(self, currentState):
         actionProbabilityDis = self.policyNet(currentState)
@@ -99,9 +98,6 @@ class AgentPG:
             self.action.append(actionProbabilityDis[1])
 
             return False
-
-    def DiscountedReward(self):
-        pass #this shuld calculate the discounted reward from reward and append it to discountedReward
     
 
 
@@ -115,7 +111,16 @@ class AgentPG:
         self.action = []
 
     def UpdateValueNet(self):
+        self.DiscountedReward()
+
         pass #this shuld update the ValueNet
+
+    #calculates the discounted reward from reward and appends it to discountedReward
+    def DiscountedReward(self):
+        for i in range(len(self.reward)):
+            for j in range(len(self.reward) - i):
+                currentDiscountedReward = (self.gamma**j) * self.reward[j + i]
+                self.discountedReward.append(currentDiscountedReward)
 
     def Loss(self):
         return 0 #shuld be the avrege of: log(policy)A over the batch, A = discountedReward - ValueNet(state)
