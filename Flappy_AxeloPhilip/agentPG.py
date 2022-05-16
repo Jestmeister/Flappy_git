@@ -22,11 +22,10 @@ class PolicyNet(nn.Module):
         self.fc3 = nn.Linear(20, 1)
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
+        x = torch.sigmoid(self.fc1(x))
         #x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
 
-        y = torch.div(x, torch.sum(x))
+        y = torch.sigmoid(self.fc3(x))
 
         return y
 
@@ -43,13 +42,17 @@ class AgentPG:
         self.start_difficulty = start_difficulty
 
         self.state = torch.empty(0, 4, dtype=torch.float32)
+        
         self.reward = torch.empty(0, 1, dtype=torch.float32)
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
+
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
     def StartEnv(self):
         startState = self.env.Start(True, False, self.start_difficulty)
         self.state = torch.cat((self.state, startState), 0)
+
+        self.DiscountedReward()
 
     
 
@@ -95,8 +98,9 @@ class AgentPG:
 
         #resets the (training) data
         self.state = torch.empty(0, 4, dtype=torch.float32)
-        self.reward = torch.empty(0, 1, dtype=torch.float32)
+
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
+
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
         #+ print loss function before and after update so one ses that its "improving"
@@ -112,14 +116,15 @@ class AgentPG:
 
             currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32)
             self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0)
+        
+        self.reward = torch.empty(0, 1, dtype=torch.float32)
 
     def Loss(self, actions):
         A = self.discountedReward - self.value.GetValue(self.state)
         A = A.detach()
 
-        #log(policy)A
+        #E[log(policy)A]
         loss = torch.log(actions) * A
-
         loss = torch.mean(loss)
 
         print('Total loss for this batch: {}'.format(loss.item()))
