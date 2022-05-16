@@ -42,8 +42,6 @@ class Value:
         y = Variable(y.data, requires_grad=True)
         rewardTarget = torch.Tensor(rewardTarget)
         rewardTarget = Variable(rewardTarget.data, requires_grad=True)
-        print(y.requires_grad)
-        print(rewardTarget.requires_grad)
         loss = self.criterion(rewardTarget, y)
 
         loss.backward()

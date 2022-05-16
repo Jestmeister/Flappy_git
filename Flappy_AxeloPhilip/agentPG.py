@@ -59,8 +59,6 @@ class AgentPG:
     def StartEnv(self):
         currentState = self.env.Start(True, False, self.start_difficulty)
         self.state.append(currentState)
-        self.reward.append(1)
-        self.action.append(torch.Tensor([1]))
 
     
 
@@ -69,7 +67,9 @@ class AgentPG:
         currentAction = self.SelectAction(self.state[len(self.state) - 1])
 
         currentState, currentReward, gameover = self.env.Update(currentAction)
-        self.state.append(currentState)
+
+        if not(gameover):
+            self.state.append(currentState)
         self.reward.append(currentReward)
 
         return not(gameover) #running
@@ -122,13 +122,13 @@ class AgentPG:
     def Loss(self):
         #log(policy)A
         loss = torch.Tensor([0])
-        print(loss)
+        #print(loss)
         for i in range(len(self.state)):
             #A_t = G_t - V(t)
             A = self.discountedReward[i] - self.value.GetValue(self.state[i])
 
             loss += torch.log(torch.Tensor(self.action[i])) * A
-            print(loss)
+            #print(loss)
         
         loss /= len(self.state)
 

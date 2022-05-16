@@ -4,7 +4,7 @@ import agentPG
 def main():
     # Parameters
     num_episode = 5000
-    batch_size = 500
+    batch_size = 50
     learning_rate = 0.01
     gamma = 0.99
     start_difficulty = 0
