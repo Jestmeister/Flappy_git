@@ -2,15 +2,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import Bernoulli
-from torch.autograd import Variable
-from itertools import count
-import matplotlib.pyplot as plt
-import numpy as np
 
+import matplotlib.pyplot as plt
 import random
 
-#import gym
 import environment
 
 import value
@@ -24,39 +19,23 @@ class PolicyNet(nn.Module):
 
         self.fc1 = nn.Linear(4, 20)
         #self.fc2 = nn.Linear(24, 36)
-        self.fc3 = nn.Linear(20, 2)  # Prob of Left
+        self.fc3 = nn.Linear(20, 1)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         #x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
 
-        #print(x)
-        
-        sum = torch.sum(x)
-        #print(sum)
-
-        if sum.item() == 0:
-            x[0] = 0.5
-            x[1] = 0.5
-
-            return x
-
-        y = (1 / sum)*x
-        #print(y)
-        #print("")
-        #print("")
-        #print("")
-        #print("")
+        y = torch.div(x, torch.sum(x))
 
         return y
 
 
 
 class AgentPG:
-    def StartAgent(self, learning_rate, gamma, start_difficulty):
+    def StartAgent(self, learning_rate, learning_rate_value, gamma, start_difficulty):
         self.env = environment.Game()
-        self.value = value.Value(learning_rate)
+        self.value = value.Value(learning_rate_value)
         self.policyNet = PolicyNet()
         self.optimizer = torch.optim.RMSprop(self.policyNet.parameters(), lr=learning_rate)
 
@@ -90,35 +69,24 @@ class AgentPG:
     def SelectAction(self, currentState):
         actionProbabilityDis = self.policyNet(currentState)
 
+        actionProbability = actionProbabilityDis.view(1, 1)
+        self.action = torch.cat((self.action, actionProbability), 0)
+
         selection = random.random()
-        if selection < actionProbabilityDis[0].item():
-            #print(actionProbabilityDis)
-            actionProbability = actionProbabilityDis[0].view(1, 1)
-            #print(actionProbability)
-
-            #print(self.action)
-            self.action = torch.cat((self.action, actionProbability), 0)
-            #print(self.action)
-
+        if selection < actionProbabilityDis.item():
             return True
         else:
-            actionProbability = actionProbabilityDis[1].view(1, 1)
-            self.action = torch.cat((self.action, actionProbability), 0)
-
             return False
     
 
 
     def UpdatePolicy(self):
+        print('Avg reward for this batch: {}'.format(torch.mean(self.reward).item()))
         self.DiscountedReward()
         self.value.UpdateValueNet(self.discountedReward, self.state)
-        #print(self.state)
-        #print(self.reward)
-        #print(self.discountedReward)
-        #print(self.action)
-
-        loss = self.Loss()
-
+        
+        loss = self.Loss(self.action)
+        
         loss.backward()
 
         self.optimizer.step()
@@ -145,19 +113,14 @@ class AgentPG:
             currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32)
             self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0)
 
-    def Loss(self):
-        #log(policy)A
-
-        #print(self.discountedReward)
-        #print(self.value.GetValue(self.state))
+    def Loss(self, actions):
         A = self.discountedReward - self.value.GetValue(self.state)
-        #print(A)
-        #print("")
-        loss = torch.log(torch.Tensor(self.action)) * A
-        #print(loss)
+        A = A.detach()
+
+        #log(policy)A
+        loss = torch.log(actions) * A
+
         loss = torch.mean(loss)
-        #print(loss)
-        #print(loss.grad)
 
         print('Total loss for this batch: {}'.format(loss.item()))
 
