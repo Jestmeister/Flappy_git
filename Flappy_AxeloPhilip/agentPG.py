@@ -17,17 +17,24 @@ class PolicyNet(nn.Module):
     def __init__(self):
         super(PolicyNet, self).__init__()
 
-        self.fc1 = nn.Linear(4, 20)
-        #self.fc2 = nn.Linear(24, 36)
-        self.fc3 = nn.Linear(20, 1)
+        self.fc1 = nn.Linear(4, 24)
+        self.fc2 = nn.Linear(24, 36)
+
+        #self.fc3 = nn.Linear(36, 36)
+        #self.fc4 = nn.Linear(36, 36)
+
+        self.fc5 = nn.Linear(36, 24)
+        self.fc6 = nn.Linear(24, 1)
 
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
-        #x = F.relu(self.fc2(x))
-
-        y = torch.sigmoid(self.fc3(x))
-
-        return y
+        x = torch.sigmoid(self.fc2(x))
+        #x = F.relu(self.fc3(x))
+        #x = F.relu(self.fc4(x))
+        x = torch.sigmoid(self.fc5(x))
+        x = torch.sigmoid(self.fc6(x))
+        
+        return x
 
 
 
@@ -48,8 +55,10 @@ class AgentPG:
 
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
+        self.preTrainValueNet = False
+
     def StartEnv(self):
-        startState = self.env.Start(True, False, self.start_difficulty)
+        startState = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty)
         self.state = torch.cat((self.state, startState), 0)
 
         self.DiscountedReward()
@@ -70,6 +79,9 @@ class AgentPG:
 
     #takes the current state as a torch tensor and returns true or false aka jump or not
     def SelectAction(self, currentState):
+        if self.preTrainValueNet:
+            return random.random() < 0.1
+
         actionProbabilityDis = self.policyNet(currentState)
 
         actionProbability = actionProbabilityDis.view(1, 1)
@@ -88,24 +100,25 @@ class AgentPG:
         self.DiscountedReward()
         self.value.UpdateValueNet(self.discountedReward, self.state)
         
-        loss = self.Loss(self.action)
+        if not(self.preTrainValueNet):
+            loss = self.Loss(self.action)
+            
+            loss.backward()
+
+            self.optimizer.step()
+
+            self.policyNet.zero_grad()
+
+            #print loss function before and after update so one ses that its "improving"
+            #for param in self.policyNet.parameters():
+                #print(param.data)
         
-        loss.backward()
-
-        self.optimizer.step()
-
-        self.policyNet.zero_grad()
-
         #resets the (training) data
         self.state = torch.empty(0, 4, dtype=torch.float32)
 
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
 
         self.action = torch.empty(0, 1, dtype=torch.float32)
-
-        #+ print loss function before and after update so one ses that its "improving"
-        for param in self.policyNet.parameters():
-            print(param.data)
 
     #calculates the discounted reward from reward and appends it to discountedReward
     def DiscountedReward(self):

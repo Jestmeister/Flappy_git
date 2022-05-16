@@ -108,7 +108,8 @@ class Game:
             if self.p_y > 0:
                 self.p_vx = self.p_flap_accuracy
                 self.p_flap = True
-                self.game_audio_sound['wing'].play()
+                if self.displayGame:
+                    self.game_audio_sound['wing'].play()
 
         cr_tst = self.is_Colliding(self.p_x, self.p_y, self.up_pips,
                               self.low_pips)
@@ -122,7 +123,8 @@ class Game:
             if self.pip_middle_positions <= self.p_middle_positions < self.pip_middle_positions + 4:
                 self.score += 1
                 #print(f"Your score is {self.score}")
-                self.game_audio_sound['point'].play()
+                if self.displayGame:
+                    self.game_audio_sound['point'].play()
 
         if self.p_vx < self.p_mvx and not self.p_flap:
             self.p_vx += self.p_accuracy
@@ -136,7 +138,8 @@ class Game:
         for pip_upper, pip_lower in zip(self.up_pips, self.low_pips):
             pip_upper['x'] += self.pip_Vx
             pip_lower['x'] += self.pip_Vx
-            self.x += self.pip_Vx
+        
+        self.x += self.pip_Vx
 
 
         if 0 < self.up_pips[0]['x'] < 5:
@@ -200,19 +203,22 @@ class Game:
         
     def is_Colliding(self, p_x, p_y, up_pipes, low_pipes):
         if p_y > self.play_ground - 25 or p_y < 0:
-            self.game_audio_sound['hit'].play()
+            if self.displayGame:
+                self.game_audio_sound['hit'].play()
             return True
 
         for pipe in up_pipes:
             pip_h = self.game_image['pipe'][0].get_height()
             if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < self.game_image['pipe'][0].get_width()):
-                self.game_audio_sound['hit'].play()
+                if self.displayGame:
+                    self.game_audio_sound['hit'].play()
                 return True
 
         for pipe in low_pipes:
             if (p_y + self.game_image['player'].get_height() > pipe['y']) and abs(p_x - pipe['x']) < \
                     self.game_image['pipe'][0].get_width():
-                self.game_audio_sound['hit'].play()
+                if self.displayGame:
+                    self.game_audio_sound['hit'].play()
                 return True
 
         return False
