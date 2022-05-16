@@ -34,15 +34,10 @@ class Value:
         return self.valueNet(state)
 
     def UpdateValueNet(self, rewardTarget, state):
-        y = []
-        for i in range(len(state)):
-            y.append(self.valueNet(state[i]))
-        
-        y = torch.Tensor(y)
-        y = Variable(y.data, requires_grad=True)
-        rewardTarget = torch.Tensor(rewardTarget)
-        rewardTarget = Variable(rewardTarget.data, requires_grad=True)
+        y = self.valueNet(state)
+
         loss = self.criterion(rewardTarget, y)
+        print('Total value loss for this batch: {}'.format(loss.item()))
 
         loss.backward()
 

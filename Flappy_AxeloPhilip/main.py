@@ -3,8 +3,8 @@ import agentPG
 
 def main():
     # Parameters
-    num_episode = 5000
-    batch_size = 50
+    num_episode = 500
+    batch_size = 100
     learning_rate = 0.01
     gamma = 0.99
     start_difficulty = 0
@@ -22,7 +22,8 @@ def main():
 
         # Update policy
         if e > 0 and e % batch_size == 0:
-            print(e)
+            print("")
+            print('Batch: {}'.format(e))
             theAgent.UpdatePolicy()
 
 
