@@ -45,11 +45,10 @@ class ReplayMemory(object):
         return len(self.memory)
 
 
-class DQN(nn.Module):
+class DQN_cn(nn.Module):
 
     def __init__(self,  h, w, outputs):
-        super(DQN, self).__init__()
-        super(DQN, self).__init__()
+        super(DQN_cn, self).__init__()
         self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
@@ -57,20 +56,26 @@ class DQN(nn.Module):
         self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
         self.bn3 = nn.BatchNorm2d(32)
 
+
+
+
         # Number of Linear input connections depends on output of conv2d layers
         # and therefore the input image size, so compute it.
         def conv2d_size_out(size, kernel_size = 5, stride = 2):
             return (size - (kernel_size - 1) - 1) // stride  + 1
         convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
         convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-        linear_input_size = convw * convh * 32
-        self.head = nn.Linear(linear_input_size, outputs)
+        self.linear_input_size = convw * convh * 32
+        #self.head = nn.Linear(self.linear_input_size, outputs)
+        self.head = nn.Linear(384, outputs)
    
     def forward(self, x):
         x = x.float()
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
+        x = x.view(-1, 384)
+        x = self.head(x)
         return x
         
  
@@ -98,11 +103,11 @@ class DQNagent_cn:
         self.action = 0
 
         self.n_actions = 2
-        self.n_hidden = 64
+        self.n_hidden = 16
         self.n_input = len(self.game.cur_state)
 
-        self.policy_net = DQN(self.n_input, self.n_actions, self.n_hidden).to(device)
-        self.target_net = DQN(self.n_input, self.n_actions, self.n_hidden).to(device)
+        self.policy_net = DQN_cn(self.scr_height, self.scr_width, self.n_actions).to(device)
+        self.target_net = DQN_cn(self.scr_height, self.scr_width, self.n_actions).to(device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -197,10 +202,13 @@ class DQNagent_cn:
             #return random.randint(0,1)
             self.action = random.randint(0,1)
         else:
+            #print('Policy action')
             #Argmax
-            state = torch.tensor(self.game.cur_state)#.to(dtype=torch.double)
-            #print(state)
+            state = self.state#.to(dtype=torch.double)
+            
             self.action  = self.target_net(state).argmax().item()  #Dont give optimize a boolean?
+            #self.action = self.policy_net(state).max(1)[1].view(1, 1)
+            #print(self.action)
         #print(self.action)
             #with torch.no_grad():
             #    self.action = self.policy_net(torch.tensor(self.game.cur_state)).max(1)[1].view(1, 1)
@@ -231,7 +239,14 @@ class DQNagent_cn:
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
        
-        state_action_values = self.policy_net(state_batch).gather(1, action_batch.reshape(action_batch.size()[0],1))
+        #print(state_batch.shape)
+        #print(self.policy_net(state_batch).shape)
+        #print(action_batch.shape)
+        #print(action_batch.reshape(action_batch.size()[0],1).shape)
+        #print(self.state.shape)
+
+        #state_action_values = self.policy_net(state_batch).gather(1, action_batch.reshape(action_batch.size()[0],1))
+        state_action_values = self.policy_net(state_batch).gather(1, action_batch)
 
         # Compute V(s_{t+1}) for all next states.
         # Expected values of actions for non_final_next_states are computed based
@@ -302,19 +317,20 @@ class DQNagent_cn:
             self.game.update(False)
             last_screen = self.get_screen()
             current_screen = self.get_screen()
-            state = current_screen - last_screen
+    
+            self.state = current_screen - last_screen
             while not self.game.isGameOver:
                 # Select and perform an action
-                
-                old_state = cp.deepcopy(torch.tensor([state]))
+                #print(state)
+                old_state = cp.deepcopy(self.state)
                 #print(old_state)
                 #old_state = torch.tensor([old_state])
                 self.select_action()
                 self.game.update(self.read_action())
                 last_screen = cp.deepcopy(current_screen)
                 current_screen = self.get_screen()
-                state = current_screen - last_screen
-                state = cp.deepcopy(torch.tensor([state]))
+                self.state = current_screen - last_screen
+                #self.state = cp.deepcopy(torch.tensor(self.state))
                 #state = torch.tensor([state])
                 
                 frames_cleared += 1
@@ -334,10 +350,10 @@ class DQNagent_cn:
                     ramp_up = True
                 
                 reward = torch.tensor([reward], device=device)
-                action = cp.deepcopy(torch.tensor([self.action], device=device))
+                action = cp.deepcopy(torch.tensor([[self.action]], dtype=torch.long))
 
                 # Store the transition in memory
-                self.memory.push(old_state, action, state , reward)
+                self.memory.push(old_state, action, self.state , reward)
 
                 
 

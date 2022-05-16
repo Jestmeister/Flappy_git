@@ -6,8 +6,11 @@ from pygame.locals import *
 from scipy.fftpack import diff  # Basic pygame imports
 from environment import environment
 from agent import DQN, DQNagent
+from agent_cn import DQN_cn, DQNagent_cn
 import copy as cp
 import torch
+
+#CN trained bird worked good on manual input test environment!?!?!?
 
 # Global Variables for the game
 FPS = 32
@@ -115,7 +118,8 @@ def read_action(action):
 
 if __name__ == "__main__":
 
-    isHumanPlayer = True
+    isHumanPlayer = False
+    test_cn_agent = True
     testAgent = True
 
     pygame.init()
@@ -175,9 +179,61 @@ if __name__ == "__main__":
         agent = DQNagent(0,0)
         model = DQN(agent.n_input, agent.n_actions, agent.n_hidden)
         #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
-        model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
+        model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net_cnn.pt'))
         model.eval()
         game.update(False)
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                    pygame.quit()
+                    sys.exit()
+            state = torch.tensor(game.cur_state)
+            if game.isGameOver:
+                pass
+            action  = model(state).argmax().item()
+            
+            if read_action(action):
+                game_audio_sound['wing'].play()
+            if game.score != old_score:
+                old_score = game.score
+                print(f"Your score is {old_score}")
+                game_audio_sound['point'].play()
+
+            game.update(read_action(action))
+            
+            display_screen_window.blit(game_image['background'], (0, 0))
+            for pip_upper, pip_lower in zip(game.up_pips, game.low_pips):
+                display_screen_window.blit(game_image['pipe'][0], (pip_upper['x'], pip_upper['y']))
+                display_screen_window.blit(game_image['pipe'][1], (pip_lower['x'], pip_lower['y']))
+
+            display_screen_window.blit(game_image['base'], (game.b_x, play_ground))
+            display_screen_window.blit(game_image['player'], (game.p_x, game.p_y))
+            d = [int(x) for x in list(str(game.score))]
+            w = 0
+            for digit in d:
+                w += game_image['numbers'][digit].get_width()
+            Xoffset = (scr_width - w) / 2
+
+            for digit in d:
+                display_screen_window.blit(game_image['numbers'][digit], (Xoffset, scr_height * 0.12))
+                Xoffset += game_image['numbers'][digit].get_width()
+
+            pygame.display.update()
+            time_clock.tick(FPS)
+
+    #TODO: Implement test_cn_agent
+    elif test_cn_agent:
+        old_score = 0
+        agent = DQNagent_cn(0,0)
+        model = DQN_cn(agent.scr_height, scr_width, agent.n_actions)
+        #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
+        model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net_cnn.pt'))
+        model.eval()
+        game.update(False)
+        last_screen = agent.get_screen()
+        current_screen = self.get_screen()
+
+        self.state = current_screen - last_screen
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):

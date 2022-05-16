@@ -87,7 +87,7 @@ class DQNagent:
         self.action = 0
 
         self.n_actions = 2
-        self.n_hidden = 64
+        self.n_hidden = 16
         self.n_input = len(self.game.cur_state)
 
         self.policy_net = DQN(self.n_input, self.n_actions, self.n_hidden).to(device)
@@ -167,6 +167,8 @@ class DQNagent:
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
        
+        #print(state_batch.shape)
+        #print(action_batch.reshape(action_batch.size()[0],1).shape)
         state_action_values = self.policy_net(state_batch).gather(1, action_batch.reshape(action_batch.size()[0],1))
 
         # Compute V(s_{t+1}) for all next states.
@@ -224,12 +226,12 @@ class DQNagent:
             if (cur_episode+1) % 10 == 0:    
                 print(cur_episode+1)
             if ramp_up:
-                print('Rampin that booty up!')
                 ramp_up = False
                 self.difficulty += 1
                 #Skip diff 1
                 if self.difficulty == 1:
                     self.difficulty += 1
+                print(f'Difficulty now at {self.difficulty}')
                 self.best_score = 0
                 self.game = environment(289,511,52,320,34,24,112,difficulty = self.difficulty)
             frames_cleared = 0
@@ -258,7 +260,7 @@ class DQNagent:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = -100
                     #term = torch.tensor([0])
-                if self.game.score == 50:
+                if self.game.score == 30 and self.difficulty < 4:
                     self.reward_ls[cur_episode] = frames_cleared
                     reward = 100
                     ramp_up = True
