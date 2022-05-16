@@ -3,7 +3,7 @@ import agentPG
 
 def main():
     # Parameters
-    num_episode = 300
+    num_episode = 10000
     batch_size = 100
     learning_rate = 0.01
     gamma = 0.99

@@ -24,30 +24,14 @@ class PolicyNet(nn.Module):
 
         self.fc1 = nn.Linear(4, 20)
         #self.fc2 = nn.Linear(24, 36)
-        self.fc3 = nn.Linear(20, 2)  # Prob of Left
+        self.fc3 = nn.Linear(20, 1)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         #x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
 
-        #print(x)
-        
-        sum = torch.sum(x)
-        #print(sum)
-
-        if sum.item() == 0:
-            x[0] = 0.5
-            x[1] = 0.5
-
-            return x
-
-        y = (1 / sum)*x
-        #print(y)
-        #print("")
-        #print("")
-        #print("")
-        #print("")
+        y = torch.div(x, torch.sum(x))
 
         return y
 
@@ -90,26 +74,19 @@ class AgentPG:
     def SelectAction(self, currentState):
         actionProbabilityDis = self.policyNet(currentState)
 
+        actionProbability = actionProbabilityDis.view(1, 1)
+        self.action = torch.cat((self.action, actionProbability), 0)
+
         selection = random.random()
-        if selection < actionProbabilityDis[0].item():
-            #print(actionProbabilityDis)
-            actionProbability = actionProbabilityDis[0].view(1, 1)
-            #print(actionProbability)
-
-            #print(self.action)
-            self.action = torch.cat((self.action, actionProbability), 0)
-            #print(self.action)
-
+        if selection < actionProbabilityDis.item():
             return True
         else:
-            actionProbability = actionProbabilityDis[1].view(1, 1)
-            self.action = torch.cat((self.action, actionProbability), 0)
-
             return False
     
 
 
     def UpdatePolicy(self):
+        print('Avg reward for this batch: {}'.format(torch.mean(self.reward).item()))
         self.DiscountedReward()
         self.value.UpdateValueNet(self.discountedReward, self.state)
         #print(self.state)
@@ -117,8 +94,8 @@ class AgentPG:
         #print(self.discountedReward)
         #print(self.action)
 
-        loss = self.Loss()
-
+        loss = self.Loss(self.action)
+        
         loss.backward()
 
         self.optimizer.step()
@@ -145,15 +122,16 @@ class AgentPG:
             currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32)
             self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0)
 
-    def Loss(self):
+    def Loss(self, actions):
         #log(policy)A
 
         #print(self.discountedReward)
         #print(self.value.GetValue(self.state))
         A = self.discountedReward - self.value.GetValue(self.state)
+        A = A.detach()
         #print(A)
         #print("")
-        loss = torch.log(torch.Tensor(self.action)) * A
+        loss = torch.log(actions) * A
         #print(loss)
         loss = torch.mean(loss)
         #print(loss)
