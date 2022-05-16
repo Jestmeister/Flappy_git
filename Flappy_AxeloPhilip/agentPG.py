@@ -2,15 +2,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import Bernoulli
-from torch.autograd import Variable
-from itertools import count
-import matplotlib.pyplot as plt
-import numpy as np
 
+import matplotlib.pyplot as plt
 import random
 
-#import gym
 import environment
 
 import value
@@ -38,9 +33,9 @@ class PolicyNet(nn.Module):
 
 
 class AgentPG:
-    def StartAgent(self, learning_rate, gamma, start_difficulty):
+    def StartAgent(self, learning_rate, learning_rate_value, gamma, start_difficulty):
         self.env = environment.Game()
-        self.value = value.Value(learning_rate)
+        self.value = value.Value(learning_rate_value)
         self.policyNet = PolicyNet()
         self.optimizer = torch.optim.RMSprop(self.policyNet.parameters(), lr=learning_rate)
 
@@ -89,11 +84,7 @@ class AgentPG:
         print('Avg reward for this batch: {}'.format(torch.mean(self.reward).item()))
         self.DiscountedReward()
         self.value.UpdateValueNet(self.discountedReward, self.state)
-        #print(self.state)
-        #print(self.reward)
-        #print(self.discountedReward)
-        #print(self.action)
-
+        
         loss = self.Loss(self.action)
         
         loss.backward()
@@ -123,19 +114,13 @@ class AgentPG:
             self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0)
 
     def Loss(self, actions):
-        #log(policy)A
-
-        #print(self.discountedReward)
-        #print(self.value.GetValue(self.state))
         A = self.discountedReward - self.value.GetValue(self.state)
         A = A.detach()
-        #print(A)
-        #print("")
+
+        #log(policy)A
         loss = torch.log(actions) * A
-        #print(loss)
+
         loss = torch.mean(loss)
-        #print(loss)
-        #print(loss.grad)
 
         print('Total loss for this batch: {}'.format(loss.item()))
 
