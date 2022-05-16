@@ -188,11 +188,11 @@ class Game:
                 y_of_pipe = pipe['y']
 
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
-        next_state = torch.tensor([x_to_pipe, self.p_y, y_of_pipe, self.x])
+        next_state = torch.tensor([[x_to_pipe, self.p_y, y_of_pipe, self.x]], dtype=torch.float32)
         if only_state:
             return next_state
 
-        reward = self.score + 1
+        reward = torch.tensor([[self.score + 1]], dtype=torch.float32)
 
         done = self.gameover
 

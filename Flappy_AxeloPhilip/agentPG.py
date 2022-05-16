@@ -1,5 +1,4 @@
 
-import imp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -33,8 +32,15 @@ class PolicyNet(nn.Module):
         x = F.relu(self.fc3(x))
         
         sum = torch.sum(x)
+
+        if sum.item() == 0:
+            x[0] = 0.5
+            x[1] = 0.5
+
+            return x
+
         y = (1 / sum)*x
-        
+
         return y
 
 
@@ -49,16 +55,14 @@ class AgentPG:
         self.gamma = gamma #use in: DiscountedReward()
         self.start_difficulty = start_difficulty
 
-        self.state = []
-
-        self.reward = []
-        self.discountedReward = []
-
-        self.action = []
+        self.state = torch.empty(0, 4, dtype=torch.float32)
+        self.reward = torch.empty(0, 1, dtype=torch.float32)
+        self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
+        self.action = torch.empty(0, 1, dtype=torch.float32)
 
     def StartEnv(self):
-        currentState = self.env.Start(True, False, self.start_difficulty)
-        self.state.append(currentState)
+        startState = self.env.Start(True, False, self.start_difficulty)
+        self.state = torch.cat((self.state, startState), 0)
 
     
 
@@ -69,8 +73,8 @@ class AgentPG:
         currentState, currentReward, gameover = self.env.Update(currentAction)
 
         if not(gameover):
-            self.state.append(currentState)
-        self.reward.append(currentReward)
+            self.state = torch.cat((self.state, currentState), 0)
+        self.reward = torch.cat((self.reward, currentReward), 0)
 
         return not(gameover) #running
 
@@ -80,11 +84,13 @@ class AgentPG:
 
         selection = random.random()
         if selection < actionProbabilityDis[0].item():
-            self.action.append(actionProbabilityDis[0])
+            actionProbability = torch.tensor([[actionProbabilityDis[0].item()]])
+            self.action = torch.cat((self.action, actionProbability), 0)
 
             return True
         else:
-            self.action.append(actionProbabilityDis[1])
+            actionProbability = torch.tensor([[actionProbabilityDis[0].item()]])
+            self.action = torch.cat((self.action, actionProbability), 0)
 
             return False
     
@@ -93,6 +99,10 @@ class AgentPG:
     def UpdatePolicy(self):
         self.DiscountedReward()
         self.value.UpdateValueNet(self.discountedReward, self.state)
+        #print(self.state)
+        #print(self.reward)
+        #print(self.discountedReward)
+        #print(self.action)
 
         loss = self.Loss()
 
@@ -103,10 +113,10 @@ class AgentPG:
         self.policyNet.zero_grad()
 
         #resets the (training) data
-        self.state = []
-        self.reward = []
-        self.discountedReward = []
-        self.action = []
+        self.state = torch.empty(0, 4, dtype=torch.float32)
+        self.reward = torch.empty(0, 1, dtype=torch.float32)
+        self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
+        self.action = torch.empty(0, 1, dtype=torch.float32)
 
         #+ print loss function before and after update so one ses that its "improving"
 
@@ -115,9 +125,10 @@ class AgentPG:
         for i in range(len(self.reward)):
             currentDiscountedReward = 0
             for j in range(len(self.reward) - i):
-                currentDiscountedReward += (self.gamma**j) * self.reward[j + i]
-            
-            self.discountedReward.append(torch.tensor(currentDiscountedReward))
+                currentDiscountedReward += (self.gamma**j) * self.reward[j + i].item()
+
+            currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32)
+            self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0)
 
     def Loss(self):
         #log(policy)A
