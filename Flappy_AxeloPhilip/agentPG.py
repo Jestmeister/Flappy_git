@@ -30,8 +30,11 @@ class PolicyNet(nn.Module):
         x = F.relu(self.fc1(x))
         #x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
+
+        #print(x)
         
         sum = torch.sum(x)
+        #print(sum)
 
         if sum.item() == 0:
             x[0] = 0.5
@@ -40,6 +43,11 @@ class PolicyNet(nn.Module):
             return x
 
         y = (1 / sum)*x
+        #print(y)
+        #print("")
+        #print("")
+        #print("")
+        #print("")
 
         return y
 
@@ -84,12 +92,17 @@ class AgentPG:
 
         selection = random.random()
         if selection < actionProbabilityDis[0].item():
-            actionProbability = torch.tensor([[actionProbabilityDis[0].item()]])
+            #print(actionProbabilityDis)
+            actionProbability = actionProbabilityDis[0].view(1, 1)
+            #print(actionProbability)
+
+            #print(self.action)
             self.action = torch.cat((self.action, actionProbability), 0)
+            #print(self.action)
 
             return True
         else:
-            actionProbability = torch.tensor([[actionProbabilityDis[0].item()]])
+            actionProbability = actionProbabilityDis[1].view(1, 1)
             self.action = torch.cat((self.action, actionProbability), 0)
 
             return False
@@ -134,16 +147,17 @@ class AgentPG:
 
     def Loss(self):
         #log(policy)A
-        loss = torch.Tensor([0])
-        #print(loss)
-        for i in range(len(self.state)):
-            #A_t = G_t - V(t)
-            A = self.discountedReward[i] - self.value.GetValue(self.state[i])
 
-            loss += torch.log(torch.Tensor(self.action[i])) * A
-            #print(loss)
-        
-        loss /= len(self.state)
+        #print(self.discountedReward)
+        #print(self.value.GetValue(self.state))
+        A = self.discountedReward - self.value.GetValue(self.state)
+        #print(A)
+        #print("")
+        loss = torch.log(torch.Tensor(self.action)) * A
+        #print(loss)
+        loss = torch.mean(loss)
+        #print(loss)
+        #print(loss.grad)
 
         print('Total loss for this batch: {}'.format(loss.item()))
 
