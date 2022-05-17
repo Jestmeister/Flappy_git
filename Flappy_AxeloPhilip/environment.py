@@ -104,11 +104,13 @@ class Game:
 
 
     def Update(self, jump):
+        self.new_score = True
+
         if jump == 1:
             if self.p_y > 0:
                 self.p_vx = self.p_flap_accuracy
                 self.p_flap = True
-                if self.displayGame:
+                if self.limitFPS:
                     self.game_audio_sound['wing'].play()
 
         cr_tst = self.is_Colliding(self.p_x, self.p_y, self.up_pips,
@@ -122,8 +124,10 @@ class Game:
             self.pip_middle_positions = pipe['x'] + self.game_image['pipe'][0].get_width() / 2
             if self.pip_middle_positions <= self.p_middle_positions < self.pip_middle_positions + 4:
                 self.score += 1
+                self.new_score = True
+
                 #print(f"Your score is {self.score}")
-                if self.displayGame:
+                if self.limitFPS:
                     self.game_audio_sound['point'].play()
 
         if self.p_vx < self.p_mvx and not self.p_flap:
@@ -194,8 +198,11 @@ class Game:
         next_state = torch.tensor([[x_to_pipe, self.p_y, y_of_pipe, self.x]], dtype=torch.float32)
         if only_state:
             return next_state
-
-        reward = torch.tensor([[self.score + 1]], dtype=torch.float32)
+        
+        if self.new_score:
+            reward = torch.tensor([[self.score + 1]], dtype=torch.float32)
+        else:
+            reward = torch.tensor([[0]], dtype=torch.float32)
 
         done = self.gameover
 
@@ -203,21 +210,21 @@ class Game:
         
     def is_Colliding(self, p_x, p_y, up_pipes, low_pipes):
         if p_y > self.play_ground - 25 or p_y < 0:
-            if self.displayGame:
+            if self.limitFPS:
                 self.game_audio_sound['hit'].play()
             return True
 
         for pipe in up_pipes:
             pip_h = self.game_image['pipe'][0].get_height()
             if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < self.game_image['pipe'][0].get_width()):
-                if self.displayGame:
+                if self.limitFPS:
                     self.game_audio_sound['hit'].play()
                 return True
 
         for pipe in low_pipes:
             if (p_y + self.game_image['player'].get_height() > pipe['y']) and abs(p_x - pipe['x']) < \
                     self.game_image['pipe'][0].get_width():
-                if self.displayGame:
+                if self.limitFPS:
                     self.game_audio_sound['hit'].play()
                 return True
 
