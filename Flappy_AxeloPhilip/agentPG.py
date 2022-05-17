@@ -40,14 +40,15 @@ class PolicyNet(nn.Module):
 
 class AgentPG:
     def StartAgent(self, learning_rate, learning_rate_value, gamma, start_difficulty):
-        self.env = environment.Game()
-        self.value = value.Value(learning_rate_value)
-        self.policyNet = PolicyNet()
-        self.optimizer = torch.optim.RMSprop(self.policyNet.parameters(), lr=learning_rate)
+        self.env = environment.Game() #creates a env obj
+        self.value = value.Value(learning_rate_value) #creates a value estimation obj
+        self.policyNet = PolicyNet() #creates a policy net obj
+        self.optimizer = torch.optim.RMSprop(self.policyNet.parameters(), lr=learning_rate) #create a optimizer obj
 
-        self.gamma = gamma #use in: DiscountedReward()
-        self.start_difficulty = start_difficulty
+        self.gamma = gamma #use in DiscountedReward()
+        self.start_difficulty = start_difficulty #use in env obj
 
+        #tensors determining the run
         self.state = torch.empty(0, 4, dtype=torch.float32)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32)
@@ -58,24 +59,26 @@ class AgentPG:
         self.preTrainValueNet = False
 
     def StartEnv(self):
-        startState = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty)
-        self.state = torch.cat((self.state, startState), 0)
+        startState = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty) #start game
+        self.state = torch.cat((self.state, startState), 0) #append start state to states "list"
 
-        self.DiscountedReward()
+        self.DiscountedReward() #calc DiscountedReward from reward + empty reward
 
     
 
     #plays one frame of the game and saves the state, reward and action for UpdatePolicy()
     def Update(self):
-        currentAction = self.SelectAction(self.state[len(self.state) - 1])
+        currentAction = self.SelectAction(self.state[len(self.state) - 1]) #selects the action based on the last state
 
-        currentState, currentReward, gameover = self.env.Update(currentAction)
+        currentState, currentReward, gameover = self.env.Update(currentAction) #runs a frame of the game
 
+        #adds the state to the "list" if not gameover
         if not(gameover):
             self.state = torch.cat((self.state, currentState), 0)
-        self.reward = torch.cat((self.reward, currentReward), 0)
 
-        return not(gameover) #running
+        self.reward = torch.cat((self.reward, currentReward), 0) #adds the reward to the "list"
+
+        return not(gameover) #= running
 
     #takes the current state as a torch tensor and returns true or false aka jump or not
     def SelectAction(self, currentState):
@@ -108,11 +111,8 @@ class AgentPG:
 
             self.policyNet.zero_grad()
 
-            #print loss function before and after update so one ses that its "improving"
-            #for param in self.policyNet.parameters():
-                #print(param.data)
-
         self.value.UpdateValueNet(self.discountedReward, self.state)
+
         #resets the (training) data
         self.state = torch.empty(0, 4, dtype=torch.float32)
 
