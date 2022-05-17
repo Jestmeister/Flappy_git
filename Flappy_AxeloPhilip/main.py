@@ -3,13 +3,18 @@ import agentPG
 
 def main():
     # Parameters
-    num_episode = 10000
-    batch_size = 500
-    learning_rate = 0.01
-    learning_rate_value = 0.0002
-    gamma = 0.99
+    num_episode = 20000
+    batch_size = 1000
+
+    learning_rate = 0.004
+    learning_rate_value = 0.00005
+    gamma = 0.8
+
     start_difficulty = 0
-    num_pre_train = 2000
+
+    num_pre_train = 10000
+    batch_size_after_pre_train = 400
+    learning_rate_value_after_pre_train = 0.0001
 
     theAgent = agentPG.AgentPG()
 
@@ -37,6 +42,8 @@ def main():
                 theAgent.preTrainValueNet = True
             else:
                 theAgent.preTrainValueNet = False
+                batch_size = batch_size_after_pre_train
+                learning_rate_value = learning_rate_value_after_pre_train
 
 
 

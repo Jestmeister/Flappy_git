@@ -201,9 +201,9 @@ class Game:
             return next_state
         
         if self.new_score:
-            reward = torch.tensor([[self.score + 1]], dtype=torch.float32)
+            reward = torch.tensor([[10]], dtype=torch.float32)
         else:
-            reward = torch.tensor([[0]], dtype=torch.float32)
+            reward = torch.tensor([[1]], dtype=torch.float32)
 
         done = self.gameover
 

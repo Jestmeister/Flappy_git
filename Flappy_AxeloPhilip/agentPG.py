@@ -103,7 +103,7 @@ class AgentPG:
 
 
     def UpdatePolicy(self):
-        print('Avg reward for this batch: {}'.format(torch.mean(self.reward).item()))
+        print('Tot discountedReward for this batch: {}'.format(torch.sum(self.discountedReward).item()))
         self.DiscountedReward() #calc DiscountedReward for last game of batch
         
         #update PolicyNet if not value net pre training
