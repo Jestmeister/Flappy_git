@@ -59,7 +59,8 @@ class AgentPG:
         self.preTrainValueNet = False
 
     def StartEnv(self):
-        startState = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty) #start game
+        not_used = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty) #start game
+        startState, not_used, not_used = self.env.Update(False)
         self.state = torch.cat((self.state, startState), 0) #append start state to states "list"
 
         self.DiscountedReward() #calc DiscountedReward from reward + empty reward
@@ -82,14 +83,17 @@ class AgentPG:
 
     #takes the current state as a torch tensor and returns true or false aka jump or not
     def SelectAction(self, currentState):
+        #random jump if pre training
         if self.preTrainValueNet:
             return random.random() < 0.1
 
-        actionProbabilityDis = self.policyNet(currentState)
+        actionProbabilityDis = self.policyNet(currentState) #takes a state and returns policy dis
 
+        #adds policy % to "list"
         actionProbability = actionProbabilityDis.view(1, 1)
         self.action = torch.cat((self.action, actionProbability), 0)
 
+        #selects random action based on policy
         selection = random.random()
         if selection < actionProbabilityDis.item():
             return True
@@ -100,8 +104,9 @@ class AgentPG:
 
     def UpdatePolicy(self):
         print('Avg reward for this batch: {}'.format(torch.mean(self.reward).item()))
-        self.DiscountedReward()
+        self.DiscountedReward() #calc DiscountedReward for last game of batch
         
+        #update PolicyNet if not value net pre training
         if not(self.preTrainValueNet):
             loss = self.Loss(self.action)
             
@@ -111,7 +116,7 @@ class AgentPG:
 
             self.policyNet.zero_grad()
 
-        self.value.UpdateValueNet(self.discountedReward, self.state)
+        self.value.UpdateValueNet(self.discountedReward, self.state) #update value net
 
         #resets the (training) data
         self.state = torch.empty(0, 4, dtype=torch.float32)
@@ -122,23 +127,23 @@ class AgentPG:
 
     #calculates the discounted reward from reward and appends it to discountedReward
     def DiscountedReward(self):
-        for i in range(len(self.reward)):
+        for i in range(len(self.reward)): #run through all rewards
             currentDiscountedReward = 0
-            for j in range(len(self.reward) - i):
+            for j in range(len(self.reward) - i): #run through all future rewards and apply gamma
                 currentDiscountedReward += (self.gamma**j) * self.reward[j + i].item()
 
-            currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32)
-            self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0)
+            currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32) #convert to tensor
+            self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0) #add to "list"
         
-        self.reward = torch.empty(0, 1, dtype=torch.float32)
+        self.reward = torch.empty(0, 1, dtype=torch.float32) #reset reward "list"
 
     def Loss(self, actions):
-        A = self.discountedReward - self.value.GetValue(self.state)
-        A = A.detach()
+        A = self.discountedReward - self.value.GetValue(self.state) #calc advantage
+        #A = A.detach()
 
         #E[log(policy)A]
-        loss = torch.log(actions) * A
-        loss = torch.mean(loss)
+        loss = torch.log(actions) * A #loss
+        loss = torch.mean(loss) #expected
 
         print('Total loss for this batch: {}'.format(loss.item()))
 
