@@ -34,21 +34,21 @@ class ValueNet(nn.Module):
 
 class Value:
     def __init__(self, learning_rate):
-        self.valueNet = ValueNet()
-        self.criterion = nn.MSELoss()
-        self.optimizer = torch.optim.RMSprop(self.valueNet.parameters(), lr=learning_rate)
+        self.valueNet = ValueNet() #create a net obj
+        self.criterion = nn.MSELoss() #create function ref
+        self.optimizer = torch.optim.RMSprop(self.valueNet.parameters(), lr=learning_rate) #create a optimizer obj
 
     def GetValue(self, state):
-        return self.valueNet(state)
+        return self.valueNet(state) #return value estimate based on the state
 
     def UpdateValueNet(self, rewardTarget, state):
-        y = self.valueNet(state)
+        y = self.valueNet(state) #takes a "list" of states as a tensor obj and returns a "list" outputs
 
-        loss = self.criterion(rewardTarget, y)
+        loss = self.criterion(rewardTarget, y) #calc the loss
         print('Total value loss for this batch: {}'.format(loss.item()))
 
-        loss.backward()
+        loss.backward() #determines the gradient
 
-        self.optimizer.step()
+        self.optimizer.step() #learn
 
-        self.valueNet.zero_grad()
+        self.valueNet.zero_grad() #reset gradients
