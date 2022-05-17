@@ -126,8 +126,8 @@ class Game:
             if self.pip_middle_positions <= self.p_middle_positions < self.pip_middle_positions + 4:
                 self.score += 1
                 self.new_score = True
-
-                #print(f"Your score is {self.score}")
+                if self.score > 5:
+                    print(f"Your score is {self.score}")
                 if self.limitFPS:
                     self.game_audio_sound['point'].play()
 
@@ -217,14 +217,14 @@ class Game:
 
         for pipe in up_pipes:
             pip_h = self.game_image['pipe'][0].get_height()
-            if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < self.game_image['pipe'][0].get_width()):
+            if (p_y < pip_h + pipe['y'] and abs(p_x - pipe['x']) < self.game_image['pipe'][0].get_width()-20):
                 if self.limitFPS:
                     self.game_audio_sound['hit'].play()
                 return True
 
         for pipe in low_pipes:
             if (p_y + self.game_image['player'].get_height() > pipe['y']) and abs(p_x - pipe['x']) < \
-                    self.game_image['pipe'][0].get_width():
+                    self.game_image['pipe'][0].get_width()-20:
                 if self.limitFPS:
                     self.game_audio_sound['hit'].play()
                 return True

@@ -98,7 +98,6 @@ class AgentPG:
     def UpdatePolicy(self):
         print('Avg reward for this batch: {}'.format(torch.mean(self.reward).item()))
         self.DiscountedReward()
-        self.value.UpdateValueNet(self.discountedReward, self.state)
         
         if not(self.preTrainValueNet):
             loss = self.Loss(self.action)
@@ -112,7 +111,8 @@ class AgentPG:
             #print loss function before and after update so one ses that its "improving"
             #for param in self.policyNet.parameters():
                 #print(param.data)
-        
+
+        self.value.UpdateValueNet(self.discountedReward, self.state)
         #resets the (training) data
         self.state = torch.empty(0, 4, dtype=torch.float32)
 

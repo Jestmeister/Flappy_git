@@ -3,13 +3,13 @@ import agentPG
 
 def main():
     # Parameters
-    num_episode = 100000
-    batch_size = 1000
+    num_episode = 10000
+    batch_size = 500
     learning_rate = 0.01
     learning_rate_value = 0.0002
-    gamma = 0.9
+    gamma = 0.99
     start_difficulty = 0
-    num_pre_train = 20000
+    num_pre_train = 2000
 
     theAgent = agentPG.AgentPG()
 
