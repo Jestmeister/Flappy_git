@@ -100,6 +100,7 @@ class Game:
         # x cordinate for NN
         self.x = 0
 
+        self.new_score = True
         return self.game_State(True)
 
 
@@ -190,7 +191,7 @@ class Game:
         x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
         y_of_pipe = self.low_pips[0]['y']
         for pipe in self.low_pips:
-            if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < x_to_pipe:
+            if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < x_to_pipe + 85.0:
                 x_to_pipe = abs(self.p_x - pipe['x'])
                 y_of_pipe = pipe['y']
 
