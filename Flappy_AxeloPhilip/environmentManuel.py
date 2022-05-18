@@ -104,8 +104,6 @@ class Game:
 
         self.gameover = False
 
-        self.p_y_prev = 136.0
-
         self.new_score = True
 
         self.start = True
@@ -199,27 +197,16 @@ class Game:
     def game_State(self):
         x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
         y_of_pipe = self.low_pips[0]['y']
-        x_to_pipes = []
-        y_of_pipes = []
         for pipe in self.low_pips:
-            x_pipe = pipe['x'] + 15.0
-            if x_pipe > self.p_x:
-                x_to_pipe = abs(self.p_x - x_pipe)
+            if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < x_to_pipe + 85.0:
+                x_to_pipe = abs(self.p_x - pipe['x'])
                 y_of_pipe = pipe['y']
 
-                x_to_pipes.append(x_to_pipe)
-                y_of_pipes.append(y_of_pipe)
-        
-        if len(x_to_pipes) == 1:
-            x_to_pipes.append(x_to_pipes[0] + 150.0)
-            y_of_pipes.append(y_of_pipes[0])
-
-        next_state = torch.tensor([[self.p_y, self.p_y - self.p_y_prev, x_to_pipes[0], y_of_pipes[0], x_to_pipes[1], y_of_pipes[1], self.score]], dtype=torch.float32)
-        self.p_y_prev = self.p_y
-        #print(next_state)
+        #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
+        next_state = torch.tensor([[x_to_pipe, self.p_y, y_of_pipe]], dtype=torch.float32)
 
         if self.new_score:
-            reward = torch.tensor([[10 * (self.score + 1)]], dtype=torch.float32)
+            reward = torch.tensor([[10]], dtype=torch.float32)
         else:
             reward = torch.tensor([[1]], dtype=torch.float32)
 

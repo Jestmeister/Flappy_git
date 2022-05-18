@@ -3,6 +3,8 @@ import agentPG
 
 import agentManuel
 
+import agentPGCNN
+
 
 
 def main():

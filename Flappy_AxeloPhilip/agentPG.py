@@ -17,7 +17,7 @@ class PolicyNet(nn.Module):
     def __init__(self):
         super(PolicyNet, self).__init__()
 
-        self.fc1 = nn.Linear(3, 36)
+        self.fc1 = nn.Linear(7, 36)
         self.fc2 = nn.Linear(36, 36)
         self.fc3 = nn.Linear(36, 36)
         self.fc4 = nn.Linear(36, 1)
@@ -43,7 +43,7 @@ class AgentPG:
         self.start_difficulty = start_difficulty #use in env obj
 
         #tensors determining the run
-        self.state = torch.empty(0, 3, dtype=torch.float32)
+        self.state = torch.empty(0, 7, dtype=torch.float32)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32)
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
@@ -55,7 +55,7 @@ class AgentPG:
         self.batch_size = 1
 
     def StartEnv(self):
-        self.env.Start(not(self.preTrainValueNet) or True, False, self.start_difficulty) #start game
+        self.env.Start(not(self.preTrainValueNet) or False, False, self.start_difficulty) #start game
         startState, not_used, not_used = self.env.Update(False)
         self.state = torch.cat((self.state, startState), 0) #append start state to states "list"
 
@@ -115,7 +115,7 @@ class AgentPG:
         self.value.UpdateValueNet(self.discountedReward, self.state) #update value net
 
         #resets the (training) data
-        self.state = torch.empty(0, 3, dtype=torch.float32)
+        self.state = torch.empty(0, 7, dtype=torch.float32)
 
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
 

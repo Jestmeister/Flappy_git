@@ -1,11 +1,11 @@
 
-import environment
+import environmentManuel
 
 
 
 class AgentManuel:
     def StartAgent(self, learning_rate, learning_rate_value, gamma, start_difficulty):
-        self.env = environment.Game()
+        self.env = environmentManuel.Game()
 
         self.start_difficulty = start_difficulty
 
