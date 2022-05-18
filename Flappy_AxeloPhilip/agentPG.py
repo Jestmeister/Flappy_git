@@ -37,16 +37,20 @@ class AgentPG:
         self.env = environment.Game() #creates a env obj
         self.value = value.Value(learning_rate_value) #creates a value estimation obj
         self.policyNet = PolicyNet() #creates a policy net obj
+        self.policyNetOld = self.policyNet
+        self.fMSELoss = nn.MSELoss()
         self.optimizer = torch.optim.RMSprop(self.policyNet.parameters(), lr=learning_rate) #create a optimizer obj
 
         self.gamma = gamma #use in DiscountedReward()
         self.start_difficulty = start_difficulty #use in env obj
+        self.v_targ = 60
 
         #tensors determining the run
         self.state = torch.empty(0, 7, dtype=torch.float32)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32)
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
+        self.v_targ_tensor = torch.empty(0, 1, dtype=torch.float32)
 
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
@@ -118,6 +122,7 @@ class AgentPG:
         self.state = torch.empty(0, 7, dtype=torch.float32)
 
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
+        self.v_targ_tensor = torch.empty(0, 1, dtype=torch.float32)
 
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
@@ -130,6 +135,9 @@ class AgentPG:
 
             currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32) #convert to tensor
             self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0) #add to "list"
+
+            value_targ = torch.tensor([[self.v_targ]], dtype=torch.float32)
+            self.v_targ_tensor = torch.cat((self.v_targ_tensor, value_targ), 0)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32) #reset reward "list"
 
