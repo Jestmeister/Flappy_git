@@ -1,11 +1,13 @@
 
 import random  # For generating random numbers
-import sys
 from turtle import done  # We will use sys.exit to exit the program
 import pygame
 from pygame.locals import *  # Basic pygame imports
 
 import torch
+import torchvision.transforms as T
+from PIL import Image
+
 import numpy as np
 
 
@@ -59,6 +61,11 @@ class Game:
         self.game_image['background'] = pygame.image.load(self.bcg_image).convert()
         self.game_image['player'] = pygame.image.load(self.player).convert_alpha()
 
+        #for CNN
+        self.resize = T.Compose([T.ToPILImage(),
+            T.Resize(40, interpolation=Image.CUBIC),
+            T.ToTensor()])
+
     
     def Start(self, displayGameInput, limitFPSInput, start_difficulty):
         self.displayGame = displayGameInput
@@ -98,7 +105,6 @@ class Game:
         self.gameover = False
 
         # x cordinate for NN
-        self.x = 0
 
         self.new_score = True
         return self.game_State(True)
@@ -143,8 +149,6 @@ class Game:
         for pip_upper, pip_lower in zip(self.up_pips, self.low_pips):
             pip_upper['x'] += self.pip_Vx
             pip_lower['x'] += self.pip_Vx
-        
-        self.x += self.pip_Vx
 
 
         if 0 < self.up_pips[0]['x'] < 5:
@@ -174,8 +178,12 @@ class Game:
         for digit in d:
             self.display_screen_window.blit(self.game_image['numbers'][digit], (Xoffset, self.scr_height * 0.12))
             Xoffset += self.game_image['numbers'][digit].get_width()
+            
         if self.displayGame:
             pygame.display.update()
+
+            #for CNN (not used for agentPG)
+            self.imgdata = pygame.surfarray.array3d(self.display_screen_window)
         if self.limitFPS:
             self.time_clock.tick(self.FPS)
 
@@ -196,7 +204,7 @@ class Game:
                 y_of_pipe = pipe['y']
 
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
-        next_state = torch.tensor([[x_to_pipe, self.p_y, y_of_pipe, self.x]], dtype=torch.float32)
+        next_state = torch.tensor([[x_to_pipe, self.p_y, y_of_pipe]], dtype=torch.float32)
         if only_state:
             return next_state
         

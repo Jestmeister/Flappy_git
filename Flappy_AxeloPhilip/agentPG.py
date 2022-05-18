@@ -17,22 +17,16 @@ class PolicyNet(nn.Module):
     def __init__(self):
         super(PolicyNet, self).__init__()
 
-        self.fc1 = nn.Linear(4, 24)
-        self.fc2 = nn.Linear(24, 36)
-
-        #self.fc3 = nn.Linear(36, 36)
-        #self.fc4 = nn.Linear(36, 36)
-
-        self.fc5 = nn.Linear(36, 24)
-        self.fc6 = nn.Linear(24, 1)
+        self.fc1 = nn.Linear(3, 36)
+        self.fc2 = nn.Linear(36, 36)
+        self.fc3 = nn.Linear(36, 36)
+        self.fc4 = nn.Linear(36, 1)
 
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
         x = torch.sigmoid(self.fc2(x))
-        #x = F.relu(self.fc3(x))
-        #x = F.relu(self.fc4(x))
-        x = torch.sigmoid(self.fc5(x))
-        x = torch.sigmoid(self.fc6(x))
+        x = torch.sigmoid(self.fc3(x))
+        x = torch.sigmoid(self.fc4(x))
         
         return x
 
@@ -49,7 +43,7 @@ class AgentPG:
         self.start_difficulty = start_difficulty #use in env obj
 
         #tensors determining the run
-        self.state = torch.empty(0, 4, dtype=torch.float32)
+        self.state = torch.empty(0, 3, dtype=torch.float32)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32)
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
@@ -57,6 +51,8 @@ class AgentPG:
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
         self.preTrainValueNet = False
+
+        self.batch_size = 1
 
     def StartEnv(self):
         not_used = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty) #start game
@@ -103,7 +99,7 @@ class AgentPG:
 
 
     def UpdatePolicy(self):
-        print('Tot discountedReward for this batch: {}'.format(torch.sum(self.discountedReward).item()))
+        print('Tot discountedReward per run this batch: {}'.format(torch.sum(self.discountedReward).item() / self.batch_size))
         self.DiscountedReward() #calc DiscountedReward for last game of batch
         
         #update PolicyNet if not value net pre training
@@ -119,7 +115,7 @@ class AgentPG:
         self.value.UpdateValueNet(self.discountedReward, self.state) #update value net
 
         #resets the (training) data
-        self.state = torch.empty(0, 4, dtype=torch.float32)
+        self.state = torch.empty(0, 3, dtype=torch.float32)
 
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
 
