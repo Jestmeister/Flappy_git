@@ -55,7 +55,7 @@ class AgentPG:
         self.batch_size = 1
 
     def StartEnv(self):
-        not_used = self.env.Start(not(self.preTrainValueNet), False, self.start_difficulty) #start game
+        self.env.Start(not(self.preTrainValueNet) or True, False, self.start_difficulty) #start game
         startState, not_used, not_used = self.env.Update(False)
         self.state = torch.cat((self.state, startState), 0) #append start state to states "list"
 

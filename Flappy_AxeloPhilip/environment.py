@@ -104,10 +104,9 @@ class Game:
 
         self.gameover = False
 
-        # x cordinate for NN
-
         self.new_score = True
-        return self.game_State(True)
+
+        self.start = True
 
 
     def Update(self, jump):
@@ -178,7 +177,7 @@ class Game:
         for digit in d:
             self.display_screen_window.blit(self.game_image['numbers'][digit], (Xoffset, self.scr_height * 0.12))
             Xoffset += self.game_image['numbers'][digit].get_width()
-            
+
         if self.displayGame:
             pygame.display.update()
 
@@ -192,10 +191,10 @@ class Game:
         for pipe in self.up_pips:
             if pipe['x'] > self.p_x and abs(self.p_x - pipe['x']) < x_to_pipe:
                 x_to_pipe = abs(self.p_x - pipe['x'])
-
-        return self.game_State(False)
+                
+        return self.game_State()
     
-    def game_State(self, only_state):
+    def game_State(self):
         x_to_pipe = abs(self.p_x - self.low_pips[0]['x'])
         y_of_pipe = self.low_pips[0]['y']
         for pipe in self.low_pips:
@@ -205,9 +204,7 @@ class Game:
 
         #return [x_to_pipe, self.p_y, y_of_pipe, self.p_vx]
         next_state = torch.tensor([[x_to_pipe, self.p_y, y_of_pipe]], dtype=torch.float32)
-        if only_state:
-            return next_state
-        
+
         if self.new_score:
             reward = torch.tensor([[10]], dtype=torch.float32)
         else:
