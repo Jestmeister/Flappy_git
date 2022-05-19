@@ -15,11 +15,19 @@ class ValueNet(nn.Module):
         self.fc2 = nn.Linear(36, 36)
         self.fc3 = nn.Linear(36, 1)
 
+        #self.fc1 = nn.Linear(6, 60)
+        #self.fc2 = nn.Linear(60, 60)
+        #self.m = nn.MaxPool1d(6, stride=4)
+        #self.fc3 = nn.Linear(14, 14)
+        #self.fc4 = nn.Linear(14, 1)
+
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
+        #x = self.m(x)
         x = F.relu(self.fc3(x))
-
+        #x = F.relu(self.fc4(x))
+        
         return x
 
 

@@ -19,14 +19,21 @@ class PolicyNet(nn.Module):
 
         self.fc1 = nn.Linear(7, 36)
         self.fc2 = nn.Linear(36, 36)
-        self.fc3 = nn.Linear(36, 36)
-        self.fc4 = nn.Linear(36, 1)
+        self.fc3 = nn.Linear(36, 1)
+
+        #self.fc1 = nn.Linear(6, 60)
+        #self.fc2 = nn.Linear(60, 60)
+        #self.m = nn.MaxPool1d(6, stride=4)
+        #self.fc3 = nn.Linear(14, 14)
+        #self.fc4 = nn.Linear(14, 1)
 
     def forward(self, x):
         x = torch.sigmoid(self.fc1(x))
         x = torch.sigmoid(self.fc2(x))
+        #if len(x):x = x[None, :]
+        #x = self.m(x)
         x = torch.sigmoid(self.fc3(x))
-        x = torch.sigmoid(self.fc4(x))
+        #x = torch.sigmoid(self.fc4(x))
         
         return x
 
@@ -43,15 +50,13 @@ class AgentPG:
 
         self.gamma = gamma #use in DiscountedReward()
         self.start_difficulty = start_difficulty #use in env obj
-        self.v_targ = 60
 
         #tensors determining the run
         self.state = torch.empty(0, 7, dtype=torch.float32)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32)
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
-        self.v_targ_tensor = torch.empty(0, 1, dtype=torch.float32)
-
+        
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
         self.preTrainValueNet = False
@@ -104,6 +109,8 @@ class AgentPG:
 
     def UpdatePolicy(self):
         print('Tot discountedReward per run this batch: {}'.format(torch.sum(self.discountedReward).item() / self.batch_size))
+        print('Mean discountedReward per state this batch: {}'.format(torch.mean(self.discountedReward).item()))
+        
         self.DiscountedReward() #calc DiscountedReward for last game of batch
         
         #update PolicyNet if not value net pre training
@@ -122,7 +129,6 @@ class AgentPG:
         self.state = torch.empty(0, 7, dtype=torch.float32)
 
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
-        self.v_targ_tensor = torch.empty(0, 1, dtype=torch.float32)
 
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
@@ -135,9 +141,6 @@ class AgentPG:
 
             currentDiscountedRewardTensor = torch.tensor([[currentDiscountedReward]], dtype=torch.float32) #convert to tensor
             self.discountedReward = torch.cat((self.discountedReward, currentDiscountedRewardTensor), 0) #add to "list"
-
-            value_targ = torch.tensor([[self.v_targ]], dtype=torch.float32)
-            self.v_targ_tensor = torch.cat((self.v_targ_tensor, value_targ), 0)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32) #reset reward "list"
 
