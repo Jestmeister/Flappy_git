@@ -11,7 +11,7 @@ class ValueNet(nn.Module):
     def __init__(self):
         super(ValueNet, self).__init__()
 
-        self.fc1 = nn.Linear(7, 36)
+        self.fc1 = nn.Linear(5, 36)
         self.fc2 = nn.Linear(36, 36)
         self.fc3 = nn.Linear(36, 1)
 

@@ -17,7 +17,7 @@ class PolicyNet(nn.Module):
     def __init__(self):
         super(PolicyNet, self).__init__()
 
-        self.fc1 = nn.Linear(7, 36)
+        self.fc1 = nn.Linear(5, 36)
         self.fc2 = nn.Linear(36, 36)
         self.fc3 = nn.Linear(36, 1)
 
@@ -52,7 +52,7 @@ class AgentPG:
         self.start_difficulty = start_difficulty #use in env obj
 
         #tensors determining the run
-        self.state = torch.empty(0, 7, dtype=torch.float32)
+        self.state = torch.empty(0, 5, dtype=torch.float32)
         
         self.reward = torch.empty(0, 1, dtype=torch.float32)
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
@@ -127,7 +127,7 @@ class AgentPG:
     
     def ResetParm(self):
         #resets the (training) data
-        self.state = torch.empty(0, 7, dtype=torch.float32)
+        self.state = torch.empty(0, 5, dtype=torch.float32)
 
         self.discountedReward = torch.empty(0, 1, dtype=torch.float32)
 
@@ -156,3 +156,5 @@ class AgentPG:
         print('Total loss for this batch: {}'.format(loss.item()))
 
         return loss
+    def savenet(self):
+        torch.save(self.policyNet.state_dict(), '/Flappy_AxeloPhilip/Saved networks/bajs.pt')

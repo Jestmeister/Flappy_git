@@ -216,9 +216,8 @@ class Game:
             x_to_pipes.append(x_to_pipes[0] + 150.0)
             y_of_pipes.append(y_of_pipes[0])
 
-        next_state = torch.tensor([[self.p_y, self.p_y - self.p_y_prev, x_to_pipes[0], y_of_pipes[0], x_to_pipes[1], y_of_pipes[1], self.score]], dtype=torch.float32)
+        next_state = torch.tensor([[x_to_pipes[0], self.p_y, y_of_pipes[0], y_of_pipes[1], self.p_vx]], dtype=torch.float32)
         self.p_y_prev = self.p_y
-        #print(next_state)
 
         if self.new_score:
             reward = torch.tensor([[10 * (self.score + 1)]], dtype=torch.float32)
@@ -229,7 +228,8 @@ class Game:
         done = self.gameover
 
         return next_state, reward, done
-        
+
+
     def is_Colliding(self, p_x, p_y, up_pipes, low_pipes):
         if p_y > self.play_ground - 25 or p_y < 0:
             if self.limitFPS:
