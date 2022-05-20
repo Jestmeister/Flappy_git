@@ -6,17 +6,17 @@ import agentPGCNN
 
 def main():
     # Parameters
-    num_episode = 160
-    batch_size = 10
+    num_episode = 1600
+    batch_size = 100
 
-    learning_rate = 0.01
+    learning_rate = 0.001
     learning_rate_value = 0.005
     gamma = 0.9
 
     start_difficulty = 0
 
-    num_pre_train = 40
-    batch_size_after_pre_train = 5
+    num_pre_train = 400
+    batch_size_after_pre_train = 50
     learning_rate_value_after_pre_train = 0.01 * learning_rate_value
 
     theAgent = agentPG.AgentPG()

@@ -157,4 +157,4 @@ class AgentPG:
 
         return loss
     def savenet(self):
-        torch.save(self.policyNet.state_dict(), '/Flappy_AxeloPhilip/Saved networks/bajs.pt')
+        torch.save(self.policyNet.state_dict(), '/Flappy_AxeloPhilip/Saved networks/bajs4.pt')
