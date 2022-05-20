@@ -55,6 +55,9 @@ def main():
                 batch_size = batch_size_after_pre_train
                 theAgent.batch_size = batch_size
                 learning_rate_value = learning_rate_value_after_pre_train
+            
+            theAgent.ResetParm()
+            
     print(plot_reward_array)
     plt.plot(plot_reward_array)
     plt.show()

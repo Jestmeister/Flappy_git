@@ -59,7 +59,7 @@ class AgentPG:
         
         self.action = torch.empty(0, 1, dtype=torch.float32)
 
-        self.preTrainValueNet = False
+        self.preTrainValueNet = True
 
         self.batch_size = 1
 
@@ -124,7 +124,8 @@ class AgentPG:
             self.policyNet.zero_grad()
 
         self.value.UpdateValueNet(self.discountedReward, self.state) #update value net
-
+    
+    def ResetParm(self):
         #resets the (training) data
         self.state = torch.empty(0, 7, dtype=torch.float32)
 
