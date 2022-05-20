@@ -38,21 +38,21 @@ def main():
             running = theAgent.Update()
         plot_reward_array.append(len(theAgent.reward))
         plot_DiscReward_array.append(len(theAgent.discountedReward))
+
+        if num_pre_train > e:
+            theAgent.preTrainValueNet = True
+        else:
+            theAgent.preTrainValueNet = False
+            batch_size = batch_size_after_pre_train
+            theAgent.batch_size = batch_size
+            learning_rate_value = learning_rate_value_after_pre_train
+            
         # Update policy
         if e > 0 and e % batch_size == 0:
             print('Batch: {}'.format(e))
             theAgent.UpdatePolicy()
-
-            if num_pre_train > e:
-                theAgent.preTrainValueNet = True
-            else:
-                theAgent.preTrainValueNet = False
-                batch_size = batch_size_after_pre_train
-                theAgent.batch_size = batch_size
-                learning_rate_value = learning_rate_value_after_pre_train
-            
-            theAgent.ResetParm()
-    theAgent.savenet()
+                
+    print(plot_reward_array)
     plt.plot(plot_reward_array)
     plt.show()
 
