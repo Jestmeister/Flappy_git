@@ -111,12 +111,6 @@ def main_gameplay(game):
 
 
 
-def NN(NNInput):
-    print(NNInput)
-
-    probability = 0.1
-    return random.random() < probability
-
 def get_screen(imdata):
         screen = imdata.transpose((2, 0, 1))
         screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
@@ -142,7 +136,7 @@ def SelectAction(policyNet, currentState):
 if __name__ == "__main__":
 
     isHumanPlayer = False
-    testAgent = False
+    testAgent = True
     testAgent_PG = True
     test_cn_agent = False
 
@@ -209,7 +203,7 @@ if __name__ == "__main__":
             agent = DQNagent(0,0)
             model = DQN(agent.n_input, agent.n_actions, agent.n_hidden)
             #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
-            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net_dense.pt'))
+            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net18.pt'))
             model.eval()
             game.update(False)
             while True:
@@ -264,7 +258,7 @@ if __name__ == "__main__":
             old_score = 0
             model = PolicyNet()
             #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
-            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/savednetn1.pt'))
+            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/bajs4.pt'))
             model.eval()
             game.update(False)
             while True:

@@ -67,11 +67,11 @@ class DQN(nn.Module):
 
 class DQNagent:
     def __init__(self, n_episodes, start_difficulty):   
-        self.BATCH_SIZE = 64
-        self.GAMMA = 0.999
+        self.BATCH_SIZE = 32
+        self.GAMMA = 0.99
         self.EPS_START = 0.7
         self.EPS_END = 0.00001
-        self.EPS_DECAY = 60
+        self.EPS_DECAY = 50
         self.TARGET_UPDATE = 20
 
         self.n_episodes = n_episodes
@@ -90,8 +90,8 @@ class DQNagent:
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
-        self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(30000)
+        self.optimizer = optim.RMSprop(self.policy_net.parameters(),lr=0.00005)
+        self.memory = ReplayMemory(50000)
 
         self.steps_done = 0
         self.best_score = 0
@@ -103,8 +103,8 @@ class DQNagent:
     def select_action(self):
         #global steps_done
         sample = random.random()
-        eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
-            math.exp(-1. * self.steps_done / self.EPS_DECAY)
+        #eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
+          #  math.exp(-1. * self.steps_done / self.EPS_DECAY)
         
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * \
             math.exp(-1. * (self.steps_done + self.game.score * 10) / self.EPS_DECAY)
@@ -253,7 +253,7 @@ class DQNagent:
                     self.best_score = self.game.score
                 if self.game.isGameOver:
                     self.reward_ls[cur_episode] = frames_cleared
-                    reward = -100
+                    reward = -1  #-100
                     #term = torch.tensor([0])
                 if self.game.score == 30 and self.difficulty < 4:
                     self.reward_ls[cur_episode] = frames_cleared
