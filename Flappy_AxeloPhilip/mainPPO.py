@@ -6,7 +6,7 @@ import agentPPO
 def main():
     # Parameters
     num_episode = 30000
-    batch_size = 1000 * 0
+    batch_size = 1000
     batches_update = 10
 
     learning_rate = 0.01
@@ -15,7 +15,7 @@ def main():
 
     start_difficulty = 4
 
-    num_pre_train = 10000 * 0
+    num_pre_train = 10000
     batch_size_after_pre_train = 200
     learning_rate_value_after_pre_train = 0.01 * learning_rate_value
 

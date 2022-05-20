@@ -37,5 +37,3 @@ class AgentPPO(agentPG.AgentPG):
 
     def UpdateOld(self):
         self.policyNetOld = self.policyNet
-
-        self.ResetParm()
