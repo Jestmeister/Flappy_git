@@ -62,6 +62,7 @@ class AgentPG:
         self.preTrainValueNet = False
 
         self.batch_size = 1
+        self.batch_runs = 1
 
     def StartEnv(self):
         self.env.Start(not(self.preTrainValueNet) or False, False, self.start_difficulty) #start game
@@ -112,11 +113,12 @@ class AgentPG:
         print('Mean discountedReward per state this batch: {}'.format(torch.mean(self.discountedReward).item()))
         
         self.DiscountedReward() #calc DiscountedReward for last game of batch
-        
+
         #update PolicyNet if not value net pre training
         if not(self.preTrainValueNet):
+            #for i in range(self.batch_runs):
             loss = self.Loss(self.action)
-            
+
             loss.backward()
 
             self.optimizer.step()

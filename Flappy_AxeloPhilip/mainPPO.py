@@ -7,7 +7,7 @@ def main():
     # Parameters
     num_episode = 30000
     batch_size = 1000
-    batches_update = 10
+    batch_runs = 2
 
     learning_rate = 0.01
     learning_rate_value = 0.00005
@@ -15,14 +15,16 @@ def main():
 
     start_difficulty = 4
 
-    num_pre_train = 10000
+    num_pre_train = 0
     batch_size_after_pre_train = 200
     learning_rate_value_after_pre_train = 0.01 * learning_rate_value
 
-    theAgent = agentPPO.AgentPPO()
 
+
+    theAgent = agentPPO.AgentPPO()
     theAgent.StartAgent(learning_rate, learning_rate_value, gamma, start_difficulty)
     theAgent.batch_size = batch_size
+    theAgent.batch_runs = batch_runs
 
     if num_pre_train > 0:
         theAgent.preTrainValueNet = True
@@ -40,18 +42,15 @@ def main():
         if e > 0 and e % batch_size == 0:
             print('Batch: {}'.format(e))
             theAgent.UpdatePolicy()
+            theAgent.UpdateOld()
 
-            if num_pre_train > e:
-                theAgent.preTrainValueNet = True
-            else:
-                theAgent.preTrainValueNet = False
-                batch_size = batch_size_after_pre_train
-                theAgent.batch_size = batch_size
-                learning_rate_value = learning_rate_value_after_pre_train
-            
-            if e % (batches_update * batch_size) == 0:
-                print('UpdateOld')
-                theAgent.UpdateOld()
+        if num_pre_train > e:
+            theAgent.preTrainValueNet = True
+        else:
+            theAgent.preTrainValueNet = False
+            batch_size = batch_size_after_pre_train
+            theAgent.batch_size = batch_size
+            learning_rate_value = learning_rate_value_after_pre_train
 
 
 
