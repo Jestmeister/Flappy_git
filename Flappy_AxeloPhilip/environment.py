@@ -137,6 +137,8 @@ class Game:
                     print(f"Your score is {self.score}")
                 if self.limitFPS:
                     self.game_audio_sound['point'].play()
+            else:
+                self.new_score = False
 
         if self.p_vx < self.p_mvx and not self.p_flap:
             self.p_vx += self.p_accuracy
@@ -223,6 +225,7 @@ class Game:
         else:
             reward = torch.tensor([[1]], dtype=torch.float32)
 
+        #reward = torch.tensor([[1 + self.score]], dtype=torch.float32)
         done = self.gameover
 
         return next_state, reward, done
