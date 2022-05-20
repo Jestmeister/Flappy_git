@@ -1,4 +1,3 @@
-#import gym
 import math
 import random
 import numpy as np
@@ -21,6 +20,7 @@ import copy as cp
 
 #https://pythonprogramming.net/training-deep-q-learning-dqn-reinforcement-learning-python-tutorial/?completed=/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 #https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
+#https://eklavyafcb.github.io/docs/FlappyBird.pdf?fbclid=IwAR33_AbP9_fH5nWke7dNn0ksjqHQP7LHqcaANwArg9iyWu5vi2LLDOyvWXQ
 
 #TODO: Save weights and read in weights
 
@@ -84,10 +84,10 @@ class DQN_cn(nn.Module):
 
 class DQNagent_cn:
     def __init__(self, n_episodes, start_difficulty):   
-        self.BATCH_SIZE = 128
+        self.BATCH_SIZE = 64
         self.GAMMA = 0.999
-        self.EPS_START = 0.95
-        self.EPS_END = 0.001
+        self.EPS_START = 0.7
+        self.EPS_END = 0.00001
         self.EPS_DECAY = 60
         self.TARGET_UPDATE = 20
 
@@ -112,7 +112,7 @@ class DQNagent_cn:
         self.target_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(10000)
+        self.memory = ReplayMemory(50000)
 
         self.steps_done = 0
         self.best_score = 0
@@ -337,7 +337,7 @@ class DQNagent_cn:
                 #reward = frames_cleared #+ self.game.score*100
                 if self.difficulty == 4 and self.best_score < self.game.score:
                     #torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
-                    torch.save(self.policy_net.state_dict(), 'C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net.pt')
+                    torch.save(self.target_net.state_dict(), f'C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net_cnn{self.game.score}.pt')
                 if self.best_score < self.game.score:
                     self.best_score = self.game.score
                 if self.game.isGameOver:
@@ -371,7 +371,7 @@ class DQNagent_cn:
             if cur_episode % self.TARGET_UPDATE == 0:
                 self.target_net.load_state_dict(self.policy_net.state_dict())
             
-        if self.difficulty == 4 and self.best_score > 5:        
+        if self.difficulty == 4 and self.best_score > 1:        
             print(f'Achieved difficulty: {self.difficulty}')
             print(f'Best score of run: {self.best_score}')
             #torch.save(self.target_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
@@ -387,6 +387,7 @@ class DQNagent_cn:
             plt.legend()
             plt.xlabel('Episode')
             plt.ylabel('Frames cleared')
+            plt.savefig('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/Results/train_prog.png')
             plt.show()
 
     def render(self):

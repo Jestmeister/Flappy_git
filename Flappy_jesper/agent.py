@@ -48,11 +48,6 @@ class DQN(nn.Module):
         self.fc1    = nn.Linear(n_inputs, n_hidden)  #change to len(self.output)
         self.fc2    = nn.Linear(n_hidden, n_hidden)
         self.fc3    = nn.Linear(n_hidden, n_actions) #len(actions)
-        #self.myNetwork = nn.Sequential(
-        #nn.Linear(n_inputs, 64),  
-        #nn.Linear(64, 64),
-        #nn.Linear(64, n_actions) 
-        #)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -72,10 +67,10 @@ class DQN(nn.Module):
 
 class DQNagent:
     def __init__(self, n_episodes, start_difficulty):   
-        self.BATCH_SIZE = 128
+        self.BATCH_SIZE = 64
         self.GAMMA = 0.999
-        self.EPS_START = 0.95
-        self.EPS_END = 0.001
+        self.EPS_START = 0.7
+        self.EPS_END = 0.00001
         self.EPS_DECAY = 60
         self.TARGET_UPDATE = 20
 
@@ -96,7 +91,7 @@ class DQNagent:
         self.target_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(10000)
+        self.memory = ReplayMemory(30000)
 
         self.steps_done = 0
         self.best_score = 0
@@ -253,7 +248,7 @@ class DQNagent:
                 #reward = frames_cleared #+ self.game.score*100
                 if self.difficulty == 4 and self.best_score < self.game.score:
                     #torch.save(self.policy_net.state_dict(), 'C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net.pt')
-                    torch.save(self.policy_net.state_dict(), 'C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net.pt')
+                    torch.save(self.target_net.state_dict(), f'C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net{self.game.score}.pt')
                 if self.best_score < self.game.score:
                     self.best_score = self.game.score
                 if self.game.isGameOver:
