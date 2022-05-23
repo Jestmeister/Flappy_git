@@ -6,17 +6,17 @@ import agentPGCNN
 
 def main():
     # Parameters
-    num_episode = 6400
-    batch_size = 320
+    num_episode = 1600
+    batch_size = 100
 
     learning_rate = 0.001
-    learning_rate_value = 0.00005
+    learning_rate_value = 0.005
     gamma = 0.9
 
     start_difficulty = 3
 
-    num_pre_train = 1600
-    batch_size_after_pre_train = 160
+    num_pre_train = 400
+    batch_size_after_pre_train = 50
     learning_rate_value_after_pre_train = 0.01 * learning_rate_value
 
     theAgent = agentPG.AgentPG()
@@ -30,7 +30,6 @@ def main():
         theAgent.preTrainValueNet = False
     plot_reward_array = []
     plot_DiscReward_array = []
-    maxscore = 0
     for e in range(num_episode):
         theAgent.StartEnv()
 
@@ -55,7 +54,6 @@ def main():
         if e > 0 and e % batch_size == 0:
             print('Batch: {}'.format(e))
             theAgent.UpdatePolicy()
-
     plt.plot(plot_reward_array)
     plt.show()
 
