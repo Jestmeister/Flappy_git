@@ -133,11 +133,18 @@ def SelectAction(policyNet, currentState):
     else:
         return False
 
+def manual(game):
+    if game.cur_state[1] > game.cur_state[2] - 75.0:
+        return True
+    else:
+        return False
+
 if __name__ == "__main__":
 
     isHumanPlayer = False
     testAgent = True
-    testAgent_PG = True
+    manual_is = False
+    testAgent_PG = False
     test_cn_agent = False
 
     pygame.init()
@@ -185,8 +192,9 @@ if __name__ == "__main__":
     #print(player_height)
     #print(base_height)
     game = environment(scr_width, scr_height,pipe_width,pipe_height,player_width,player_height,base_height,difficulty=4)
+    #Diff 0,2,4
     
-    n_test = 100
+    n_test = 2000000
     score_ls = np.zeros(n_test)
 
     if isHumanPlayer:
@@ -197,13 +205,14 @@ if __name__ == "__main__":
     ########  DENSE #########
 
     elif testAgent:
-        FPS = 256
+        #FPS = 256
+        FPS = 64
         for ep in range(n_test):
             old_score = 0
             agent = DQNagent(0,0)
             model = DQN(agent.n_input, agent.n_actions, agent.n_hidden)
             #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
-            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net18.pt'))
+            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/net_dense.pt'))
             model.eval()
             game.update(False)
             while True:
@@ -247,7 +256,53 @@ if __name__ == "__main__":
                 time_clock.tick(FPS)
     
 
+    ########  MANUAL #########
 
+    elif manual_is:
+        FPS = 256
+        for ep in range(n_test):
+            old_score = 0
+          
+            game.update(False)
+            while True:
+                for event in pygame.event.get():
+                    if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                        pygame.quit()
+                        sys.exit()
+                state = torch.tensor(game.cur_state)
+                if game.isGameOver:
+                    score_ls[ep] = old_score
+                    break
+                
+                
+                if manual(game):
+                    game_audio_sound['wing'].play()
+                if game.score != old_score:
+                    old_score = game.score
+                    print(f"Your score is {old_score}")
+                    game_audio_sound['point'].play()
+
+                game.update(manual(game))
+                
+                display_screen_window.blit(game_image['background'], (0, 0))
+                for pip_upper, pip_lower in zip(game.up_pips, game.low_pips):
+                    display_screen_window.blit(game_image['pipe'][0], (pip_upper['x'], pip_upper['y']))
+                    display_screen_window.blit(game_image['pipe'][1], (pip_lower['x'], pip_lower['y']))
+
+                display_screen_window.blit(game_image['base'], (game.b_x, play_ground))
+                display_screen_window.blit(game_image['player'], (game.p_x, game.p_y))
+                d = [int(x) for x in list(str(game.score))]
+                w = 0
+                for digit in d:
+                    w += game_image['numbers'][digit].get_width()
+                Xoffset = (scr_width - w) / 2
+
+                for digit in d:
+                    display_screen_window.blit(game_image['numbers'][digit], (Xoffset, scr_height * 0.12))
+                    Xoffset += game_image['numbers'][digit].get_width()
+
+                pygame.display.update()
+                time_clock.tick(FPS)
 
 
     ########## POLICY ##############
@@ -258,7 +313,7 @@ if __name__ == "__main__":
             old_score = 0
             model = PolicyNet()
             #model.load_state_dict(torch.load('C:/Users/jespe/Documents/GitHub/Flappy_git/Flappy_jesper/net1.pt'))
-            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/bajs4.pt'))
+            model.load_state_dict(torch.load('C:/Users/Jesper/OneDrive/Dokument/GitHub/Flappy_git/Flappy_jesper/pissnisse.pt'))
             model.eval()
             game.update(False)
             while True:
@@ -384,11 +439,16 @@ if __name__ == "__main__":
 
 
     score_ls = score_ls.astype(int)
+    meany = np.mean(score_ls)
     print(f'Best score obtained durring testing: {max(score_ls)}')
+    print(f'Mean of scores: {meany}')
+    print(f'Standard deviation of scores: {np.std(score_ls)}')
     plt.figure()
-    plt.plot(score_ls)
+    plt.plot(score_ls,label='Score')
+    plt.plot([0, len(score_ls)-1],[meany,meany],label='Mean Score')
     plt.xlabel('Episode Number')
     plt.ylabel('Score')
+    plt.legend()
     
     plt.figure()
     #plt.hist(score_ls, bins=max(score_ls))
