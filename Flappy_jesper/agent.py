@@ -19,6 +19,7 @@ import copy as cp
 #https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
 
 #TODO: Normalize inputs
+#TODO: Make sure only reward is counted at terminal state
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
